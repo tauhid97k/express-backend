@@ -14,7 +14,7 @@ const validationErrorHandler = (res, error) => {
     return { name, feedback: { type, message } }
   })
 
-  res.status(422).json({
+  res.status(400).json({
     message: 'Validation error',
     validationError,
   })

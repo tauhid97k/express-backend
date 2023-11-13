@@ -1,21 +1,20 @@
 const yup = require('yup')
 const prisma = require('../utils/prisma')
 
-const registerValidator = yup.object({
-  name: yup.string().required('Name is required'),
+const loginValidator = yup.object({
   email: yup
     .string()
     .required('Email is required')
     .email('Email is invalid')
-    .test('unique', 'Email already exist', async (value) => {
+    .test('exist', 'Email does not exist', async (value) => {
       const email = await prisma.users.findUnique({
         where: {
           email: value,
         },
       })
 
-      if (email) return false
-      else return true
+      if (email) return true
+      else return false
     }),
   password: yup
     .string()
@@ -23,4 +22,4 @@ const registerValidator = yup.object({
     .min(8, 'Password must be at least 8 characters'),
 })
 
-module.exports = registerValidator
+module.exports = loginValidator
