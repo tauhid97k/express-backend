@@ -23,12 +23,14 @@ model users {
 }
 
 model personal_tokens {
-  id            Int     @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
   user_id       Int
-  user          users   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user          users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_device   String?
   refresh_token String
   expires_at    Int
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 
   @@index([refresh_token], type: Hash)
 }

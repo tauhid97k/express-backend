@@ -1,6 +1,7 @@
 const prisma = require('../utils/prisma')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const isEmpty = require('lodash/isEmpty')
 const asyncHandler = require('express-async-handler')
 const createError = require('../utils/errorHandler')
 const registerValidator = require('../validators/registerValidator')
@@ -86,12 +87,22 @@ const login = asyncHandler(async (req, res, next) => {
       const jwtExpireTime = jwt.decode(refreshToken, { complete: true }).payload
         .exp
 
-      // Save refresh token to database
+      // Save refresh token to database with device model (if available)
+      const deviceBrand = isEmpty(req.device.device.brand)
+        ? ''
+        : req.device.device.brand
+      const deviceModel = isEmpty(req.device.device.model)
+        ? ''
+        : req.device.device.model
+      const deviceWithModel =
+        deviceBrand && deviceModel ? `${deviceBrand} ${deviceModel}` : 'unknown'
+
       await tx.personal_tokens.create({
         data: {
           user_id: user.id,
           refresh_token: refreshToken,
           expires_at: jwtExpireTime,
+          user_device: deviceWithModel,
         },
       })
 
@@ -184,13 +195,6 @@ const refreshAuthToken = asyncHandler(async (req, res, next) => {
 
       if (!user) return res.status(401).json({ message: 'Unauthorized' })
 
-      // Delete current refresh token from database
-      await prisma.personal_tokens.deleteMany({
-        where: {
-          refresh_token: refreshToken,
-        },
-      })
-
       // New JWT Access Token
       const newAccessToken = jwt.sign(
         {
@@ -217,10 +221,12 @@ const refreshAuthToken = asyncHandler(async (req, res, next) => {
       const jwtExpireTime = jwt.decode(newRefreshToken, { complete: true })
         .payload.exp
 
-      // Save refresh token to database
-      await prisma.personal_tokens.create({
+      // Save and update refresh token in database
+      await prisma.personal_tokens.updateMany({
+        where: {
+          refresh_token: refreshToken,
+        },
         data: {
-          user_id: user.id,
           refresh_token: newRefreshToken,
           expires_at: jwtExpireTime,
         },
@@ -245,13 +251,19 @@ const refreshAuthToken = asyncHandler(async (req, res, next) => {
   @desc     Auth user
 */
 const authUser = asyncHandler(async (req, res, next) => {
-  // Need some work
+  const user = await prisma.users.findUnique({
+    email: req.user,
+  })
+
+  res.json({
+    user,
+  })
 })
 
 /*
   @route    POST: /logout
   @access   private
-  @desc     Logout auth user (remove cookie)
+  @desc     Logout auth user
 */
 const logout = asyncHandler(async (req, res, next) => {
   await prisma.$transaction(async (tx) => {
@@ -261,7 +273,7 @@ const logout = asyncHandler(async (req, res, next) => {
 
     const refreshToken = cookies.express_jwt
 
-    // Delete refresh token from database
+    // Delete refresh tokens from database
     await tx.personal_tokens.deleteMany({
       where: {
         refresh_token: refreshToken,
@@ -286,7 +298,38 @@ const logout = asyncHandler(async (req, res, next) => {
   @access   private
   @desc     Logout user's all devices
 */
-const logoutAll = asyncHandler(async (req, res, next) => {})
+const logoutAll = asyncHandler(async (req, res, next) => {
+  await prisma.$transaction(async (tx) => {
+    const cookies = req.cookies
+    if (!cookies?.express_jwt)
+      return res.status(401).json({ message: 'Unauthorized' })
+
+    // Get the user
+    const user = await tx.users.findUnique({
+      where: {
+        email: req.user,
+      },
+    })
+
+    // Delete refresh tokens from database
+    await tx.personal_tokens.deleteMany({
+      where: {
+        user_id: user.id,
+      },
+    })
+
+    // Clear cookie
+    res.clearCookie('express_jwt', {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+    })
+
+    res.json({
+      message: 'All devices are logged out',
+    })
+  })
+})
 
 module.exports = {
   register,

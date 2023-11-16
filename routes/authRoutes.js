@@ -1,5 +1,6 @@
 const express = require('express')
 const router = express.Router()
+const verifyJWT = require('../middlewares/verifyJWTMiddleware')
 const {
   register,
   login,
@@ -9,8 +10,12 @@ const {
   logoutAll,
 } = require('../controllers/authController')
 
+// Public routes
 router.post('/register', register)
 router.post('/login', login)
+
+// Protected Routes
+router.use(verifyJWT)
 router.get('/refresh', refreshAuthToken)
 router.get('/user', authUser)
 router.post('/logout', logout)
