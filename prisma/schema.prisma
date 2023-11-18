@@ -17,6 +17,7 @@ model users {
   email_verify_code_expiry    DateTime?
   forgot_password_code        String?
   forgot_password_code_expiry DateTime?
+  is_suspended                Boolean           @default(false)
   created_at                  DateTime          @default(now())
   updated_at                  DateTime          @updatedAt
   personal_tokens             personal_tokens[]

@@ -61,6 +61,9 @@ const login = asyncHandler(async (req, res, next) => {
 
     // Check user
     if (email === user.email && isPasswordValid) {
+      if (user.is_suspended)
+        throw new createError(403, 'Your account is suspended')
+
       // Generate JWT Access Token
       const accessToken = jwt.sign(
         {
@@ -252,12 +255,16 @@ const refreshAuthToken = asyncHandler(async (req, res, next) => {
 */
 const authUser = asyncHandler(async (req, res, next) => {
   const user = await prisma.users.findUnique({
-    email: req.user,
+    where: { email: req.user },
+    select: {
+      name: true,
+      email: true,
+      email_verified_at: true,
+      created_at: true,
+    },
   })
 
-  res.json({
-    user,
-  })
+  res.json(user)
 })
 
 /*
