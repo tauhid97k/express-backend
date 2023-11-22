@@ -3,6 +3,7 @@ const router = express.Router()
 const verifyJWT = require('../middlewares/verifyJWTMiddleware')
 const {
   register,
+  resendEmail,
   login,
   refreshAuthToken,
   authUser,
@@ -16,6 +17,7 @@ router.post('/login', login)
 
 // Protected Routes
 router.use(verifyJWT)
+router.get('/resend-email', resendEmail)
 router.get('/refresh', refreshAuthToken)
 router.get('/user', authUser)
 router.post('/logout', logout)

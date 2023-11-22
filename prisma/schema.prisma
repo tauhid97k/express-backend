@@ -13,9 +13,9 @@ model users {
   email                       String            @unique
   password                    String
   email_verified_at           DateTime?
-  email_verify_code           String?
+  email_verify_code           Int?
   email_verify_code_expiry    DateTime?
-  forgot_password_code        String?
+  forgot_password_code        Int?
   forgot_password_code_expiry DateTime?
   is_suspended                Boolean           @default(false)
   created_at                  DateTime          @default(now())

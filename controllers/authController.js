@@ -4,8 +4,10 @@ const jwt = require('jsonwebtoken')
 const isEmpty = require('lodash/isEmpty')
 const asyncHandler = require('express-async-handler')
 const createError = require('../utils/errorHandler')
+const { sendEmailVerifyCode } = require('../utils/mailHandlers')
 const registerValidator = require('../validators/registerValidator')
 const loginValidator = require('../validators/loginValidator')
+const dayjs = require('dayjs')
 
 /*
   @route    POST: /register
@@ -19,15 +21,80 @@ const register = asyncHandler(async (req, res, next) => {
   data.password = await bcrypt.hash(data.password, 10)
 
   // Create new user
-  await prisma.users.create({ data })
+  await prisma.$transaction(async (tx) => {
+    const user = await tx.users.create({ data })
 
-  // Send a verification code to email
-  // codes...
+    // Send a verification code to email
+    const verificationCode = Math.floor(10000000 + Math.random() * 90000000)
+    await sendEmailVerifyCode(data.email, verificationCode, tx)
 
-  res.status(201).json({
-    message: 'Account created',
+    // Login the user
+    // Generate JWT Access Token
+    const accessToken = jwt.sign(
+      {
+        user: {
+          email: user.email,
+        },
+      },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: '2m' }
+    )
+
+    // Generate JWT Refresh Token
+    const refreshToken = jwt.sign(
+      {
+        user: {
+          email: user.email,
+        },
+      },
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: '7d' }
+    )
+
+    // JWT expiry
+    const jwtExpireTime = jwt.decode(refreshToken, { complete: true }).payload
+      .exp
+
+    // Save refresh token to database with device model (if available)
+    const deviceBrand = isEmpty(req.device.device.brand)
+      ? ''
+      : req.device.device.brand
+    const deviceModel = isEmpty(req.device.device.model)
+      ? ''
+      : req.device.device.model
+    const deviceWithModel =
+      deviceBrand && deviceModel ? `${deviceBrand} ${deviceModel}` : 'unknown'
+
+    await tx.personal_tokens.create({
+      data: {
+        user_id: user.id,
+        refresh_token: refreshToken,
+        expires_at: jwtExpireTime,
+        user_device: deviceWithModel,
+      },
+    })
+
+    // Create secure cookie with refresh token
+    res.cookie('express_jwt', refreshToken, {
+      httpOnly: true, // Accessible only by server
+      secure: false, // https
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    })
+
+    res.status(201).json({
+      message: 'Account created',
+      accessToken,
+    })
   })
 })
+
+/*
+  @route    GET: /resend-email
+  @access   private
+  @desc     Resend email (If not verified/received during registration)
+*/
+const resendEmail = asyncHandler(async (req, res, next) => {})
 
 /*
   @route    POST: /login
@@ -264,6 +331,9 @@ const authUser = asyncHandler(async (req, res, next) => {
     },
   })
 
+  user.email_verified_at = dayjs(user.created_at).format('DD MMM YYYY')
+  user.created_at = dayjs(user.created_at).format('DD MMM YYYY')
+
   res.json(user)
 })
 
@@ -340,6 +410,7 @@ const logoutAll = asyncHandler(async (req, res, next) => {
 
 module.exports = {
   register,
+  resendEmail,
   login,
   refreshAuthToken,
   authUser,
