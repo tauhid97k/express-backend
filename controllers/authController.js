@@ -578,6 +578,11 @@ const updatePassword = asyncHandler(async (req, res, next) => {
         },
         data: {
           password: data.password,
+          verification_tokens: {
+            deleteMany: {
+              user_id: user.id,
+            },
+          },
         },
       })
     })
