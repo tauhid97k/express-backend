@@ -561,6 +561,13 @@ const updatePassword = asyncHandler(async (req, res, next) => {
         return res.status(404).json({ message: 'User not found' })
       }
 
+      // Delete user's previous login tokens
+      await tx.personal_tokens.deleteMany({
+        where: {
+          user_id: user.id,
+        },
+      })
+
       // Encrypt password
       data.password = await bcrypt.hash(data.password, 12)
 
