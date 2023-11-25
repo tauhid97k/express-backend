@@ -4,20 +4,28 @@ const verifyJWT = require('../middlewares/verifyJWTMiddleware')
 const {
   register,
   resendEmail,
+  verifyEmail,
   login,
   refreshAuthToken,
   authUser,
   logout,
   logoutAll,
+  resetPassword,
+  verifyResetCode,
+  updatePassword,
 } = require('../controllers/authController')
 
 // Public routes
 router.post('/register', register)
 router.post('/login', login)
+router.post('/reset-password', resetPassword)
+router.post('/verify-reset-code', verifyResetCode)
+router.post('/update-password', updatePassword)
 
 // Protected Routes
 router.use(verifyJWT)
 router.get('/resend-email', resendEmail)
+router.post('/verify-email', verifyEmail)
 router.get('/refresh', refreshAuthToken)
 router.get('/user', authUser)
 router.post('/logout', logout)

@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken')
 const prisma = require('../utils/prisma')
+const dayjs = require('dayjs')
 
 const verifyJWT = (req, res, next) => {
   const authHeader = req.headers.authorization || req.headers.Authorization
@@ -16,7 +17,18 @@ const verifyJWT = (req, res, next) => {
       where: {
         email: decoded.user.email,
       },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        email_verified_at: true,
+        created_at: true,
+      },
     })
+
+    // Format dates
+    user.email_verified_at = dayjs(user.created_at).format('DD MMM YYYY')
+    user.created_at = dayjs(user.created_at).format('DD MMM YYYY')
 
     // Check if user is suspended
     if (user.is_suspended)
@@ -24,10 +36,10 @@ const verifyJWT = (req, res, next) => {
 
     // Check if user is verified
     if (!user.email_verified_at) {
-      return res.json({ message: 'Your email is not verified' })
+      return res.json({ message: 'You must verify your email' })
     }
 
-    req.user = decoded.user.email
+    req.user = user
 
     next()
   })

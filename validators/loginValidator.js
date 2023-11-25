@@ -16,10 +16,7 @@ const loginValidator = yup.object({
       if (email) return true
       else return false
     }),
-  password: yup
-    .string()
-    .required('Password is required')
-    .min(8, 'Password must be at least 8 characters'),
+  password: yup.string().required('Password is required'),
 })
 
 module.exports = loginValidator
