@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const verifyJWT = require('../middlewares/verifyJWTMiddleware')
+const verifyAuth = require('../middlewares/authMiddleware')
 const {
   register,
   resendEmail,
@@ -24,7 +24,7 @@ router.post('/update-password', updatePassword)
 router.get('/refresh-token', refreshAuthToken)
 
 // Protected Routes
-router.use(verifyJWT)
+router.use(verifyAuth)
 router.get('/resend-email', resendEmail)
 router.post('/verify-email', verifyEmail)
 router.get('/user', authUser)

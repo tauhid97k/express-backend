@@ -1,10 +1,10 @@
 const express = require('express')
 const router = express.Router()
-const verifyJWT = require('../middlewares/verifyJWTMiddleware')
+const verifyAuth = require('../middlewares/authMiddleware')
 const { rolePermissions } = require('../controllers/rolePermissionsController')
 
 // Protected Routes
-router.use(verifyJWT)
+router.use(verifyAuth)
 router.get('/', rolePermissions)
 
 module.exports = router

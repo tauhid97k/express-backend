@@ -1,9 +1,9 @@
 const express = require('express')
 const router = express.Router()
-const verifyJWT = require('../middlewares/verifyJWTMiddleware')
+const verifyAuth = require('../middlewares/authMiddleware')
 const { users } = require('../controllers/userController')
 
-router.use(verifyJWT)
+router.use(verifyAuth)
 router.get('/', users)
 
 module.exports = router

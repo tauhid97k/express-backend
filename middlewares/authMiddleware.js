@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken')
 const prisma = require('../utils/prisma')
 const dayjs = require('dayjs')
 
-const verifyJWT = (req, res, next) => {
+const verifyAuth = (req, res, next) => {
   const authHeader = req.headers.authorization || req.headers.Authorization
 
   if (!authHeader?.startsWith('Bearer ')) {
@@ -34,6 +34,20 @@ const verifyJWT = (req, res, next) => {
       },
     })
 
+    // Check if user exist in db
+    if (!user) {
+      return res.status(401).json({ message: 'Unauthorized' })
+    }
+
+    // Check if user is suspended
+    if (user.is_suspended)
+      return res.json({ message: 'Your account is suspended' })
+
+    // Check if user is verified
+    if (!user.email_verified_at) {
+      return res.json({ message: 'You must verify your email' })
+    }
+
     // Format User Data
     const formattedUser = {
       id: user.id,
@@ -47,23 +61,11 @@ const verifyJWT = (req, res, next) => {
         .roles.role_permissions.map(({ permissions }) => permissions.name),
     }
 
-    // Check if user exist in db
-    if (!user) {
-      return res.status(401).json({ message: 'Unauthorized' })
-    }
-
     // Format dates
-    user.email_verified_at = dayjs(user.created_at).format('DD MMM YYYY')
-    user.created_at = dayjs(user.created_at).format('DD MMM YYYY')
-
-    // Check if user is suspended
-    if (user.is_suspended)
-      return res.json({ message: 'Your account is suspended' })
-
-    // Check if user is verified
-    if (!user.email_verified_at) {
-      return res.json({ message: 'You must verify your email' })
-    }
+    formattedUser.email_verified_at = dayjs(user.created_at).format(
+      'DD MMM YYYY'
+    )
+    formattedUser.created_at = dayjs(user.created_at).format('DD MMM YYYY')
 
     req.user = formattedUser
 
@@ -71,4 +73,4 @@ const verifyJWT = (req, res, next) => {
   })
 }
 
-module.exports = verifyJWT
+module.exports = verifyAuth
