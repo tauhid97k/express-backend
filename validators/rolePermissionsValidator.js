@@ -3,13 +3,12 @@ const prisma = require('../utils/prisma')
 
 const rolePermissionsValidator = yup.object({
   role: yup
-    .number()
-    .typeError('Role must be an id')
+    .string()
     .required('Role is required')
     .test('unique', 'Role already exist', async (value) => {
-      const role = await prisma.users.findUnique({
+      const role = await prisma.roles.findUnique({
         where: {
-          id: value,
+          name: value,
         },
       })
 
@@ -18,7 +17,19 @@ const rolePermissionsValidator = yup.object({
     }),
   permissions: yup
     .array(yup.number().typeError('Permission must be an id'))
-    .min(1, 'Minimum one permission is required'),
+    .required('At least one permission is required')
+    .test('exist', 'One or more permission is invalid', async (values) => {
+      const checkPermissions = await prisma.permissions.findMany({
+        where: {
+          id: {
+            in: values,
+          },
+        },
+      })
+
+      if (checkPermissions.length === values.length) return true
+      else return false
+    }),
 })
 
 module.exports = { rolePermissionsValidator }

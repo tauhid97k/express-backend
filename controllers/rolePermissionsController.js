@@ -42,7 +42,35 @@ const rolePermissions = asyncHandler(async (req, res, next) => {
   @access   private
   @desc     Create a role with permissions
 */
-const createRolePermissions = asyncHandler(async (req, res, next) => {})
+const createRolePermissions = asyncHandler(async (req, res, next) => {
+  const { role, permissions } = await rolePermissionsValidator.validate(
+    req.body,
+    {
+      abortEarly: false,
+    }
+  )
+
+  await prisma.$transaction(async (tx) => {
+    // Create Role
+    const addRole = await tx.roles.create({
+      data: {
+        name: role,
+      },
+    })
+
+    // Format Role and Permissions for Database
+    const formattedRolePermissions = permissions.map((permission) => {
+      return { role_id: addRole.id, permission_id: permission }
+    })
+
+    // Create Role and their permissions
+    await tx.role_permissions.createMany({
+      data: formattedRolePermissions,
+    })
+
+    res.json({ message: 'Role and permissions are created' })
+  })
+})
 
 /*
   @route    POST: /roles
