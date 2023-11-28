@@ -24,17 +24,20 @@ model users {
   updated_at          DateTime              @updatedAt
   personal_tokens     personal_tokens[]
   verification_tokens verification_tokens[]
+  user_roles          user_roles[]
 }
 
 model personal_tokens {
-  id            Int      @id @default(autoincrement())
-  user_id       Int
-  user          users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  id      Int @id @default(autoincrement())
+  user_id Int
+
   user_device   String?
   refresh_token String
   expires_at    Int
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
+
+  user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([refresh_token], type: Hash)
 }
@@ -42,13 +45,50 @@ model personal_tokens {
 model verification_tokens {
   id          Int        @id @default(autoincrement())
   user_id     Int
-  users       users      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   code        Int
   token       String
   verify_type VerifyType
   expires_at  DateTime
   created_at  DateTime   @default(now())
 
+  users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
   @@index([code], type: Hash)
   @@index([token], type: Hash)
+}
+
+model user_roles {
+  id      Int @id @default(autoincrement())
+  user_id Int @unique
+  role_id Int
+
+  users users @relation(fields: [user_id], references: [id])
+  roles roles @relation(fields: [role_id], references: [id])
+}
+
+model role_permissions {
+  id            Int @id @default(autoincrement())
+  role_id       Int
+  permission_id Int
+
+  roles       roles       @relation(fields: [role_id], references: [id])
+  permissions permissions @relation(fields: [permission_id], references: [id])
+}
+
+model roles {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user_roles       user_roles[]
+  role_permissions role_permissions[]
+}
+
+model permissions {
+  id               Int                @id @default(autoincrement())
+  name             String             @unique
+  created_at       DateTime           @default(now())
+  updated_at       DateTime           @updatedAt
+  role_permissions role_permissions[]
 }

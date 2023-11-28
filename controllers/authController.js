@@ -16,6 +16,7 @@ const {
   resetCodeVerifyValidator,
   passwordUpdateValidator,
 } = require('../validators/verificationValidators')
+const assignRole = require('../utils/assignRole')
 
 /*
   @route    POST: /register
@@ -33,6 +34,10 @@ const register = asyncHandler(async (req, res, next) => {
     async (tx) => {
       const user = await tx.users.create({ data })
 
+      // Assign a role (Default user)
+      const role = data.role ? data.role : 'user'
+      await assignRole(user.id, role, tx)
+
       // Send a verification code to email
       const verificationCode = Math.floor(10000000 + Math.random() * 90000000)
       await sendEmailVerifyCode(data.email, verificationCode, tx)
@@ -46,7 +51,7 @@ const register = asyncHandler(async (req, res, next) => {
           },
         },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: '2m' }
+        { expiresIn: '1d' }
       )
 
       // Generate JWT Refresh Token
@@ -178,6 +183,7 @@ const verifyEmail = asyncHandler(async (req, res, next) => {
   @desc     User login
 */
 const login = asyncHandler(async (req, res, next) => {
+  console.log('Yes')
   // Check if any old cookie exist (delete it)
   const cookies = req.cookies
   if (cookies?.express_jwt) {

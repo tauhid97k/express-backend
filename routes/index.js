@@ -5,6 +5,7 @@ const router = express.Router()
 router.use('/test', require('./testRoutes'))
 
 // Routes
+router.use('/role-permissions', require('./rolePermissionsRoutes'))
 router.use('/auth', require('./authRoutes'))
 router.use('/users', require('./userRoutes'))
 

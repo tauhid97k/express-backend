@@ -21,12 +21,12 @@ router.post('/login', login)
 router.post('/reset-password', resetPassword)
 router.post('/verify-reset-code', verifyResetCode)
 router.post('/update-password', updatePassword)
+router.get('/refresh-token', refreshAuthToken)
 
 // Protected Routes
 router.use(verifyJWT)
 router.get('/resend-email', resendEmail)
 router.post('/verify-email', verifyEmail)
-router.get('/refresh', refreshAuthToken)
 router.get('/user', authUser)
 router.post('/logout', logout)
 router.post('/logout-all', logoutAll)

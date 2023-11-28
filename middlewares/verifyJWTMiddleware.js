@@ -17,14 +17,40 @@ const verifyJWT = (req, res, next) => {
       where: {
         email: decoded.user.email,
       },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        email_verified_at: true,
-        created_at: true,
+      include: {
+        user_roles: {
+          include: {
+            roles: {
+              include: {
+                role_permissions: {
+                  include: {
+                    permissions: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     })
+
+    // Format User Data
+    const formattedUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      email_verified_at: user.email_verified_at,
+      created_at: user.created_at,
+      role: user.user_roles.at(0).roles.name,
+      permissions: user.user_roles
+        .at(0)
+        .roles.role_permissions.map(({ permissions }) => permissions.name),
+    }
+
+    // Check if user exist in db
+    if (!user) {
+      return res.status(401).json({ message: 'Unauthorized' })
+    }
 
     // Format dates
     user.email_verified_at = dayjs(user.created_at).format('DD MMM YYYY')
@@ -39,7 +65,7 @@ const verifyJWT = (req, res, next) => {
       return res.json({ message: 'You must verify your email' })
     }
 
-    req.user = user
+    req.user = formattedUser
 
     next()
   })
