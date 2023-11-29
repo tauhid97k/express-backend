@@ -1,5 +1,4 @@
 const asyncHandler = require('express-async-handler')
-const prisma = require('./prisma')
 
 const assignRole = asyncHandler(async (userId, roleName, tx) => {
   const role = await tx.roles.findUnique({

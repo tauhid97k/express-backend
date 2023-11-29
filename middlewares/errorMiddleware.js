@@ -37,6 +37,10 @@ const globalError = (error, req, res, next) => {
       })
     } else if (error.name === 'ValidationError') {
       validationErrorHandler(res, error)
+    } else if (error?.code === 'P2028') {
+      res.status(408).json({
+        message: 'Request Timeout; please try again',
+      })
     } else {
       res.status(500).json({
         message: 'Something went wrong',

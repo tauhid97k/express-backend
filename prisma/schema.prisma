@@ -62,7 +62,7 @@ model user_roles {
   user_id Int @unique
   role_id Int
 
-  users users @relation(fields: [user_id], references: [id])
+  users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
   roles roles @relation(fields: [role_id], references: [id])
 }
 
@@ -71,8 +71,8 @@ model role_permissions {
   role_id       Int
   permission_id Int
 
-  roles       roles       @relation(fields: [role_id], references: [id])
-  permissions permissions @relation(fields: [permission_id], references: [id])
+  roles       roles       @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  permissions permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade)
 }
 
 model roles {
@@ -88,6 +88,7 @@ model roles {
 model permissions {
   id               Int                @id @default(autoincrement())
   name             String             @unique
+  group            String
   created_at       DateTime           @default(now())
   updated_at       DateTime           @updatedAt
   role_permissions role_permissions[]
