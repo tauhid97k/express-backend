@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken')
 const prisma = require('../utils/prisma')
-const dayjs = require('dayjs')
+const { formatDate } = require('../utils/transformData')
 
 const verifyAuth = (req, res, next) => {
   const authHeader = req.headers.authorization || req.headers.Authorization
@@ -62,10 +62,8 @@ const verifyAuth = (req, res, next) => {
     }
 
     // Format dates
-    formattedUser.email_verified_at = dayjs(user.created_at).format(
-      'DD MMM YYYY'
-    )
-    formattedUser.created_at = dayjs(user.created_at).format('DD MMM YYYY')
+    formattedUser.email_verified_at = formatDate(user.email_verified_at)
+    formattedUser.created_at = formatDate(user.created_at)
 
     req.user = formattedUser
 

@@ -13,6 +13,12 @@ enum VerifyType {
   PASSWORD_RESET
 }
 
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  UNPUBLISHED
+}
+
 model users {
   id                  Int                   @id @default(autoincrement())
   name                String
@@ -25,6 +31,7 @@ model users {
   personal_tokens     personal_tokens[]
   verification_tokens verification_tokens[]
   user_roles          user_roles[]
+  posts               posts[]
 }
 
 model personal_tokens {
@@ -92,4 +99,17 @@ model permissions {
   created_at       DateTime           @default(now())
   updated_at       DateTime           @updatedAt
   role_permissions role_permissions[]
+}
+
+model posts {
+  id          Int        @id @default(autoincrement())
+  user_id     Int
+  title       String     @unique
+  slug        String
+  description String     @db.Text
+  status      PostStatus
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
+
+  users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
