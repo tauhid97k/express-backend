@@ -10,6 +10,7 @@ const {
   globalError,
 } = require('./middlewares/errorMiddleware')
 const deviceInfoMiddleware = require('./middlewares/deviceInfoMiddleware')
+const { requireCSRF } = require('./middlewares/CSRFMiddleware')
 
 // Uncaught Exception Handler
 process.on('uncaughtException', (error) => {
@@ -41,6 +42,7 @@ app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(deviceInfoMiddleware)
+app.use(requireCSRF)
 
 // Routes
 app.use('/api', router)
