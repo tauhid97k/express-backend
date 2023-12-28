@@ -3,7 +3,7 @@ const asyncHandler = require('express-async-handler')
 const slug = require('slug')
 const {
   selectQueries,
-  paginateWithSortingFields,
+  commonFields,
   paginateWithSorting,
 } = require('../utils/metaData')
 const postValidator = require('../validators/postValidator')
@@ -14,16 +14,33 @@ const postValidator = require('../validators/postValidator')
   @desc     Get all posts
 */
 const getPosts = asyncHandler(async (req, res, next) => {
-  const selectedQueries = selectQueries(req.query, paginateWithSortingFields)
+  const selectedQueries = selectQueries(req.query, commonFields)
+  let { search } = selectedQueries
   const { page, take, skip, orderBy } = paginateWithSorting(selectedQueries)
 
+  search = search ? search : null
   const [posts, total] = await prisma.$transaction([
     prisma.posts.findMany({
+      where: search
+        ? {
+            title: {
+              contains: search,
+            },
+          }
+        : {},
       take,
       skip,
       orderBy,
     }),
-    prisma.posts.count(),
+    prisma.posts.count({
+      where: search
+        ? {
+            title: {
+              contains: search,
+            },
+          }
+        : {},
+    }),
   ])
 
   return res.json({

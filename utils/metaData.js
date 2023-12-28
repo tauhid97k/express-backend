@@ -12,7 +12,7 @@ const selectQueries = (obj, keys) => {
 }
 
 // Pagination and sorting keys
-const paginateWithSortingFields = ['page', 'limit', 'sortBy', 'sortOrder']
+const commonFields = ['search', 'page', 'limit', 'sortBy', 'sortOrder']
 
 // Pagination and sorting functionalities
 const paginateWithSorting = (options) => {
@@ -34,6 +34,6 @@ const paginateWithSorting = (options) => {
 
 module.exports = {
   selectQueries,
-  paginateWithSortingFields,
+  commonFields,
   paginateWithSorting,
 }
