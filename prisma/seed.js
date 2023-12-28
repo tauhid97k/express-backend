@@ -1,6 +1,11 @@
+const slug = require('slug')
 const prisma = require('../utils/prisma')
+const { faker } = require('@faker-js/faker')
 
+// Create admin and user role
 const roles = [{ name: 'admin' }, { name: 'user' }]
+
+// Create a few permissions
 const permissions = [
   {
     name: 'view_users',
@@ -36,15 +41,44 @@ const permissions = [
   },
 ]
 
+// Create a few posts
+const posts = []
+
+for (let i = 0; i <= 50; i++) {
+  const postObject = {
+    user_id: 1,
+    title: faker.lorem.sentence(),
+    slug: faker.lorem.slug(),
+    description: faker.lorem.paragraph(),
+    status: faker.helpers.arrayElement(['DRAFT', 'PUBLISHED', 'UNPUBLISHED']),
+  }
+
+  posts.push(postObject)
+}
+
 async function main() {
-  await prisma.$transaction([
-    prisma.roles.createMany({
-      data: roles,
-    }),
-    prisma.permissions.createMany({
-      data: permissions,
-    }),
+  const [usersCount, rolesCount, permissionsCount] = await prisma.$transaction([
+    prisma.users.count(),
+    prisma.roles.count(),
+    prisma.permissions.count(),
   ])
+
+  if (!rolesCount && !permissionsCount) {
+    await prisma.$transaction([
+      prisma.roles.createMany({
+        data: roles,
+      }),
+      prisma.permissions.createMany({
+        data: permissions,
+      }),
+    ])
+  }
+
+  if (usersCount) {
+    await prisma.posts.createMany({
+      data: posts,
+    })
+  }
 }
 
 main()
