@@ -76,4 +76,23 @@ const createPost = asyncHandler(async (req, res, next) => {
   })
 })
 
-module.exports = { getPosts, createPost }
+/*
+  @route    DELETE: /posts/:id
+  @access   private
+  @desc     Delete a post
+*/
+const deletePost = asyncHandler(async (req, res, next) => {
+  const id = req.params.id
+
+  await prisma.posts.delete({
+    where: {
+      id: Number(id),
+    },
+  })
+
+  res.status(201).json({
+    message: 'Post is deleted',
+  })
+})
+
+module.exports = { getPosts, createPost, deletePost }
