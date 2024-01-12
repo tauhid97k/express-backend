@@ -1,34 +1,22 @@
 const express = require('express')
 const router = express.Router()
-const verifyAuth = require('../middlewares/authMiddleware')
-const {
-  register,
-  resendEmail,
-  verifyEmail,
-  login,
-  refreshAuthToken,
-  authUser,
-  logout,
-  logoutAll,
-  resetPassword,
-  verifyResetCode,
-  updatePassword,
-} = require('../controllers/authController')
+const authMiddleware = require('../middlewares/authMiddleware')
+const authController = require('../controllers/authController')
 
 // Public routes
-router.post('/register', register)
-router.post('/login', login)
-router.post('/reset-password', resetPassword)
-router.post('/verify-reset-code', verifyResetCode)
-router.post('/update-password', updatePassword)
-router.get('/refresh-token', refreshAuthToken)
+router.post('/register', authController.register)
+router.post('/login', authController.login)
+router.post('/reset-password', authController.resetPassword)
+router.post('/verify-reset-code', authController.verifyResetCode)
+router.post('/update-password', authController.updatePassword)
+router.get('/refresh-token', authController.refreshAuthToken)
 
 // Protected Routes
-router.use(verifyAuth)
-router.get('/resend-email', resendEmail)
-router.post('/verify-email', verifyEmail)
-router.get('/user', authUser)
-router.post('/logout', logout)
-router.post('/logout-all', logoutAll)
+router.use(authMiddleware)
+router.get('/resend-email', authController.resendEmail)
+router.post('/verify-email', authController.verifyEmail)
+router.get('/user', authController.authUser)
+router.post('/logout', authController.logout)
+router.post('/logout-all', authController.logoutAll)
 
 module.exports = router

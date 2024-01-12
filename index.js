@@ -4,14 +4,12 @@ const cors = require('cors')
 const helmet = require('helmet')
 const { rateLimit } = require('express-rate-limit')
 const cookieParser = require('cookie-parser')
-const crypto = require('node:crypto')
-const router = require('./routes')
+const allRoutes = require('./routes')
 const {
   urlNotFoundError,
   globalError,
 } = require('./middlewares/errorMiddleware')
 const deviceInfoMiddleware = require('./middlewares/deviceInfoMiddleware')
-const { requireCSRF, verifyCSRF } = require('./middlewares/CSRFMiddleware')
 
 // Uncaught Exception Handler
 process.on('uncaughtException', (error) => {
@@ -36,33 +34,21 @@ const limiter = rateLimit({
 })
 
 // Middlewares
-app.use(cors())
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+    credentials: true,
+  })
+)
 app.use(helmet())
 app.use(limiter)
 app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(deviceInfoMiddleware)
-app.use(requireCSRF)
-app.use(verifyCSRF)
 
-// API Routes
-app.get('/csrf-token', (req, res) => {
-  // Generate a CSRF token and store it in a cookie
-  const csrfToken = crypto.randomBytes(64).toString('hex')
-  res.cookie('csrfToken', csrfToken, {
-    httpOnly: true,
-    secure: false, // https
-    sameSite: 'lax',
-  })
-
-  // Make the CSRF token available in the response locals for use in views
-  res.locals.csrf = csrfToken
-  res.json({
-    message: 'CSRF token is set successfully',
-  })
-})
-app.use('/api', router)
+// All Routes
+app.use('/api', allRoutes)
 
 // Error Handlers
 app.all('*', urlNotFoundError)

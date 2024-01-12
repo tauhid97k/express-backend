@@ -183,7 +183,6 @@ const verifyEmail = asyncHandler(async (req, res, next) => {
   @desc     User login
 */
 const login = asyncHandler(async (req, res, next) => {
-  console.log('Yes')
   // Check if any old cookie exist (delete it)
   const cookies = req.cookies
   if (cookies?.express_jwt) {

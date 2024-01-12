@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken')
 const prisma = require('../utils/prisma')
 const { formatDate } = require('../utils/transformData')
 
-const verifyAuth = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization || req.headers.Authorization
 
   if (!authHeader?.startsWith('Bearer ')) {
@@ -11,8 +11,9 @@ const verifyAuth = (req, res, next) => {
 
   const token = authHeader.split(' ')[1]
 
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (error, decoded) => {
-    if (error) return res.status(403).json({ message: 'Forbidden' })
+  try {
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
+
     const user = await prisma.users.findUnique({
       where: {
         email: decoded.user.email,
@@ -34,14 +35,15 @@ const verifyAuth = (req, res, next) => {
       },
     })
 
-    // Check if user exist in db
+    // Check if user exists in the database
     if (!user) {
       return res.status(401).json({ message: 'Unauthorized' })
     }
 
     // Check if user is suspended
-    if (user.is_suspended)
+    if (user.is_suspended) {
       return res.json({ message: 'Your account is suspended' })
+    }
 
     // Check if user is verified
     if (!user.email_verified_at) {
@@ -68,7 +70,9 @@ const verifyAuth = (req, res, next) => {
     req.user = formattedUser
 
     next()
-  })
+  } catch (error) {
+    return res.status(403).json({ message: 'Forbidden' })
+  }
 }
 
-module.exports = verifyAuth
+module.exports = authMiddleware

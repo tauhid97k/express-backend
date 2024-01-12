@@ -1,15 +1,11 @@
 const express = require('express')
 const router = express.Router()
-const verifyAuth = require('../middlewares/authMiddleware')
-const {
-  getPosts,
-  createPost,
-  deletePost,
-} = require('../controllers/postController')
+const authMiddleware = require('../middlewares/authMiddleware')
+const postController = require('../controllers/postController')
 
-router.use(verifyAuth)
-router.get('/', getPosts)
-router.post('/', createPost)
-router.delete('/:id', deletePost)
+router.use(authMiddleware)
+router.get('/', postController.getPosts)
+router.post('/', postController.createPost)
+router.delete('/:id', postController.deletePost)
 
 module.exports = router
