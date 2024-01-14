@@ -64,10 +64,6 @@ const register = asyncHandler(async (req, res, next) => {
         { expiresIn: '7d' }
       )
 
-      // JWT expiry
-      const jwtExpireTime = jwt.decode(refreshToken, { complete: true }).payload
-        .exp
-
       // Save refresh token to database with device model (if available)
       const deviceBrand = isEmpty(req.device.device.brand)
         ? ''
@@ -82,7 +78,6 @@ const register = asyncHandler(async (req, res, next) => {
         data: {
           user_id: user.id,
           refresh_token: refreshToken,
-          expires_at: jwtExpireTime,
           user_device: deviceWithModel,
         },
       })
@@ -158,7 +153,7 @@ const verifyEmail = asyncHandler(async (req, res, next) => {
     })
 
     if (!checkVerifyCode) {
-      return res.json({ message: 'Invalid Code' })
+      return res.status(400).json({ message: 'Invalid Code' })
     }
 
     await tx.users.update({
@@ -182,9 +177,19 @@ const verifyEmail = asyncHandler(async (req, res, next) => {
   @desc     User login
 */
 const login = asyncHandler(async (req, res, next) => {
-  // Check if any old cookie exist (delete it)
+  // Check if any old cookie exist
   const cookies = req.cookies
   if (cookies?.express_jwt) {
+    const refreshToken = cookies.express_jwt
+
+    // Check if this token exist in database (Delete it)
+    await prisma.personal_tokens.deleteMany({
+      where: {
+        refresh_token: refreshToken,
+      },
+    })
+
+    // Delete old cookie
     res.clearCookie('express_jwt', {
       httpOnly: true,
       secure: false,
@@ -235,10 +240,6 @@ const login = asyncHandler(async (req, res, next) => {
         { expiresIn: '7d' }
       )
 
-      // JWT expiry
-      const jwtExpireTime = jwt.decode(refreshToken, { complete: true }).payload
-        .exp
-
       // Save refresh token to database with device model (if available)
       const deviceBrand = isEmpty(req.device.device.brand)
         ? ''
@@ -253,7 +254,6 @@ const login = asyncHandler(async (req, res, next) => {
         data: {
           user_id: user.id,
           refresh_token: refreshToken,
-          expires_at: jwtExpireTime,
           user_device: deviceWithModel,
         },
       })
@@ -418,15 +418,11 @@ const logout = asyncHandler(async (req, res, next) => {
     const refreshToken = cookies.express_jwt
 
     // Delete refresh tokens from database
-    const tokens = await tx.personal_tokens.deleteMany({
+    await tx.personal_tokens.deleteMany({
       where: {
         refresh_token: refreshToken,
       },
     })
-
-    if (!tokens.length) {
-      return res.status(401).json({ message: 'Unauthorized' })
-    }
 
     // Clear cookie
     res.clearCookie('express_jwt', {
@@ -452,23 +448,29 @@ const logoutAll = asyncHandler(async (req, res, next) => {
     if (!cookies?.express_jwt)
       return res.status(401).json({ message: 'Unauthorized' })
 
-    // Get the user
-    const user = await tx.users.findUnique({
-      where: {
-        email: req.user,
-      },
-    })
+    const refreshToken = cookies.express_jwt
 
-    // Delete refresh tokens from database
-    const tokens = await tx.personal_tokens.deleteMany({
-      where: {
-        user_id: user.id,
-      },
-    })
+    // Verify token
+    jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET,
+      asyncHandler(async (error, decoded) => {
+        if (error) return res.status(403).json({ message: 'Forbidden' })
 
-    if (!tokens.length) {
-      return res.status(401).json({ message: 'Unauthorized' })
-    }
+        const user = await tx.users.findUnique({
+          where: {
+            email: decoded.user.email,
+          },
+        })
+
+        // Delete refresh tokens from database
+        await tx.personal_tokens.deleteMany({
+          where: {
+            user_id: user.id,
+          },
+        })
+      })
+    )
 
     // Clear cookie
     res.clearCookie('express_jwt', {
@@ -519,7 +521,7 @@ const verifyResetCode = asyncHandler(async (req, res, next) => {
   })
 
   if (!checkVerifyCode) {
-    return res.json({ message: 'Invalid Code' })
+    return res.status(400).json({ message: 'Invalid Code' })
   }
 
   // Generate A Token (With user id)
