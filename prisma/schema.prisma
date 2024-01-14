@@ -40,7 +40,6 @@ model personal_tokens {
 
   user_device   String?
   refresh_token String
-  expires_at    Int
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 

@@ -50,7 +50,7 @@ const register = asyncHandler(async (req, res, next) => {
           },
         },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: '1d' }
+        { expiresIn: '5m' }
       )
 
       // Generate JWT Refresh Token
@@ -221,7 +221,7 @@ const login = asyncHandler(async (req, res, next) => {
           },
         },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: '1d' }
+        { expiresIn: '5m' }
       )
 
       // Generate JWT Refresh Token
@@ -358,7 +358,7 @@ const refreshAuthToken = asyncHandler(async (req, res, next) => {
           },
         },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: '2m' }
+        { expiresIn: '5m' }
       )
 
       // New JWT Refresh Token
@@ -372,10 +372,6 @@ const refreshAuthToken = asyncHandler(async (req, res, next) => {
         { expiresIn: '7d' }
       )
 
-      // JWT expiry
-      const jwtExpireTime = jwt.decode(newRefreshToken, { complete: true })
-        .payload.exp
-
       // Save and update refresh token in database
       await prisma.personal_tokens.updateMany({
         where: {
@@ -383,7 +379,6 @@ const refreshAuthToken = asyncHandler(async (req, res, next) => {
         },
         data: {
           refresh_token: newRefreshToken,
-          expires_at: jwtExpireTime,
         },
       })
 
@@ -423,11 +418,15 @@ const logout = asyncHandler(async (req, res, next) => {
     const refreshToken = cookies.express_jwt
 
     // Delete refresh tokens from database
-    await tx.personal_tokens.deleteMany({
+    const tokens = await tx.personal_tokens.deleteMany({
       where: {
         refresh_token: refreshToken,
       },
     })
+
+    if (!tokens.length) {
+      return res.status(401).json({ message: 'Unauthorized' })
+    }
 
     // Clear cookie
     res.clearCookie('express_jwt', {
@@ -461,11 +460,15 @@ const logoutAll = asyncHandler(async (req, res, next) => {
     })
 
     // Delete refresh tokens from database
-    await tx.personal_tokens.deleteMany({
+    const tokens = await tx.personal_tokens.deleteMany({
       where: {
         user_id: user.id,
       },
     })
+
+    if (!tokens.length) {
+      return res.status(401).json({ message: 'Unauthorized' })
+    }
 
     // Clear cookie
     res.clearCookie('express_jwt', {
@@ -527,7 +530,7 @@ const verifyResetCode = asyncHandler(async (req, res, next) => {
       },
     },
     process.env.RESET_TOKEN_SECRET,
-    { expiresIn: '2m' }
+    { expiresIn: '5m' }
   )
 
   res.json({
