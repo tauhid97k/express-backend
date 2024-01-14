@@ -3,7 +3,6 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const isEmpty = require('lodash/isEmpty')
 const asyncHandler = require('express-async-handler')
-const createError = require('../utils/errorHandler')
 const {
   sendEmailVerifyCode,
   sendPasswordResetCode,
@@ -210,7 +209,9 @@ const login = asyncHandler(async (req, res, next) => {
     // Check user
     if (email === user.email && isPasswordValid) {
       if (user.is_suspended)
-        throw new createError(403, 'Your account is suspended')
+        return res.status(423).json({
+          message: 'Your account is suspended',
+        })
 
       // Generate JWT Access Token
       const accessToken = jwt.sign(
@@ -267,9 +268,12 @@ const login = asyncHandler(async (req, res, next) => {
 
       res.json({
         accessToken,
+        message: 'Login successful',
       })
     } else {
-      throw new createError(401, 'Invalid email or password')
+      res.status(400).json({
+        message: 'Invalid email or password',
+      })
     }
   })
 })

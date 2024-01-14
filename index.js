@@ -51,8 +51,8 @@ app.use(deviceInfoMiddleware)
 app.use('/api', allRoutes)
 
 // Error Handlers
-app.all('*', urlNotFoundError)
 app.use(globalError)
+app.all('*', urlNotFoundError)
 
 const server = app.listen(port, () => {
   console.log(`Server running on port ${port}`)

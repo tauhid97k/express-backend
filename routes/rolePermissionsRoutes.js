@@ -8,9 +8,8 @@ const {
 } = require('../controllers/rolePermissionsController')
 
 // Protected Routes
-router.use(authMiddleware)
-router.get('/', rolePermissions)
-router.post('/', createRolePermissions)
-router.put('/', updateRolePermissions)
+router.get('/', authMiddleware(), rolePermissions)
+router.post('/', authMiddleware(), createRolePermissions)
+router.put('/', authMiddleware(), updateRolePermissions)
 
 module.exports = router
