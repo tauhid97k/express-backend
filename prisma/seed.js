@@ -1,5 +1,5 @@
-const slug = require('slug')
 const prisma = require('../utils/prisma')
+const bcrypt = require('bcrypt')
 const { faker } = require('@faker-js/faker')
 
 // Create admin and user role
@@ -62,6 +62,18 @@ async function main() {
     prisma.roles.count(),
     prisma.permissions.count(),
   ])
+
+  if (!usersCount) {
+    const password = await bcrypt.hash('admin12345', 12)
+    await prisma.users.create({
+      data: {
+        name: 'admin',
+        email: 'admin@example.com',
+        password,
+        email_verified_at: new Date().toISOString(),
+      },
+    })
+  }
 
   if (!rolesCount && !permissionsCount) {
     await prisma.$transaction([
