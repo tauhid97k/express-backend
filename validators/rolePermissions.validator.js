@@ -1,24 +1,23 @@
-const yup = require('yup')
-const prisma = require('../utils/prisma')
+import * as yup from 'yup'
+import prisma from '../config/db.config.js'
 
 const rolePermissionsValidator = yup.object({
   role: yup
     .string()
     .required('Role is required')
-    .test('unique', 'Role already exist', async (value) => {
+    .test('unique', 'Role already exists', async (value) => {
       const role = await prisma.roles.findUnique({
         where: {
           name: value,
         },
       })
 
-      if (role) return false
-      else return true
+      return !role
     }),
   permissions: yup
     .array(yup.number().typeError('Permission must be an id'))
     .required('At least one permission is required')
-    .test('exist', 'One or more permission is invalid', async (values) => {
+    .test('exist', 'One or more permissions are invalid', async (values) => {
       const checkPermissions = await prisma.permissions.findMany({
         where: {
           id: {
@@ -27,8 +26,7 @@ const rolePermissionsValidator = yup.object({
         },
       })
 
-      if (checkPermissions.length === values.length) return true
-      else return false
+      return checkPermissions.length === values.length
     }),
 })
 
@@ -43,13 +41,12 @@ const updateRolePermissionsValidator = yup.object({
         },
       })
 
-      if (role) return true
-      else return false
+      return !!role
     }),
   permissions: yup
     .array(yup.number().typeError('Permission must be an id'))
     .required('At least one permission is required')
-    .test('exist', 'One or more permission is invalid', async (values) => {
+    .test('exist', 'One or more permissions are invalid', async (values) => {
       const checkPermissions = await prisma.permissions.findMany({
         where: {
           id: {
@@ -58,12 +55,8 @@ const updateRolePermissionsValidator = yup.object({
         },
       })
 
-      if (checkPermissions.length === values.length) return true
-      else return false
+      return checkPermissions.length === values.length
     }),
 })
 
-module.exports = {
-  rolePermissionsValidator,
-  updateRolePermissionsValidator,
-}
+export { rolePermissionsValidator, updateRolePermissionsValidator }

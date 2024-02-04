@@ -1,15 +1,13 @@
-const express = require('express')
-require('dotenv').config()
-const cors = require('cors')
-const helmet = require('helmet')
-const { rateLimit } = require('express-rate-limit')
-const cookieParser = require('cookie-parser')
-const allRoutes = require('./routes')
-const {
+import express from 'express'
+import { rateLimit } from 'express-rate-limit'
+import cors from 'cors'
+import helmet from 'helmet'
+import cookieParser from 'cookie-parser'
+import allRoutes from './routes/index.js'
+import {
   urlNotFoundError,
   globalError,
-} = require('./middlewares/errorMiddleware')
-const deviceInfoMiddleware = require('./middlewares/deviceInfoMiddleware')
+} from './middlewares/error.middleware.js'
 
 // Uncaught Exception Handler
 process.on('uncaughtException', (error) => {
@@ -18,6 +16,7 @@ process.on('uncaughtException', (error) => {
   process.exit(1)
 })
 
+// App Init
 const app = express()
 const port = process.env.PORT
 
@@ -45,7 +44,6 @@ app.use(limiter)
 app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
-app.use(deviceInfoMiddleware)
 
 // All Routes
 app.use('/api', allRoutes)
@@ -54,6 +52,7 @@ app.use('/api', allRoutes)
 app.use(globalError)
 app.all('*', urlNotFoundError)
 
+// Server
 const server = app.listen(port, () => {
   console.log(`Server running on port ${port}`)
 })

@@ -1,19 +1,18 @@
-const yup = require('yup')
-const prisma = require('../utils/prisma')
+import * as yup from 'yup'
+import prisma from '../config/db.config.js'
 
 const postValidator = yup.object({
   title: yup
     .string()
     .required('Post title is required')
-    .test('unique', 'Post title already exist', async (value) => {
+    .test('unique', 'Post title already exists', async (value) => {
       const post = await prisma.posts.findUnique({
         where: {
           title: value,
         },
       })
 
-      if (post) return false
-      else return true
+      return !post
     }),
   slug: yup.string().optional(),
   description: yup.string().required('Description is required'),
@@ -23,4 +22,4 @@ const postValidator = yup.object({
     .oneOf(['DRAFT', 'PUBLISHED', 'UNPUBLISHED']),
 })
 
-module.exports = postValidator
+export default postValidator

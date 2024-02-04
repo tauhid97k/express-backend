@@ -1,12 +1,14 @@
-const express = require('express')
+import express from 'express'
 const router = express.Router()
-
-// Test Routes
-router.use('/test', require('./testRoutes'))
+import authRoutes from './auth.route.js'
+import userRoutes from './user.route.js'
+import rolePermissionsRoutes from './rolePermissions.route.js'
+import postRoutes from './post.route.js'
 
 // Routes
-router.use('/auth', require('./authRoutes'))
-router.use('/role-permissions', require('./rolePermissionsRoutes'))
-router.use('/posts', require('./postRoutes'))
+router.use('/auth', authRoutes)
+router.use('/user', userRoutes)
+router.use('/role-permissions', rolePermissionsRoutes)
+router.use('/posts', postRoutes)
 
-module.exports = router
+export default router

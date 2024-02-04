@@ -1,11 +1,13 @@
 {
-  "name": "express-base",
+  "name": "express-backend",
   "version": "1.0.0",
-  "description": "Backend Base With Express.js",
+  "description": "Express robust backend with ",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "dev": "SET NODE_ENV=development& nodemon index.js",
-    "prod": "SET NODE_ENV=production& nodemon index.js"
+    "start": "node server.js",
+    "dev": "SET NODE_ENV=development& nodemon sever.js",
+    "prod": "SET NODE_ENV=production& nodemon server.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -13,7 +15,7 @@
   "author": "Md. Tauhid",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^5.7.1",
+    "@prisma/client": "^5.9.1",
     "bcrypt": "^5.1.1",
     "bullmq": "^4.14.0",
     "cookie-parser": "^1.4.6",
@@ -35,6 +37,6 @@
     "@faker-js/faker": "^8.3.1",
     "dotenv": "^16.3.1",
     "nodemon": "^3.0.1",
-    "prisma": "^5.7.1"
+    "prisma": "^5.9.1"
   }
 }

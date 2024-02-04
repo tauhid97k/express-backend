@@ -1,12 +1,12 @@
-const prisma = require('../utils/prisma')
-const asyncHandler = require('express-async-handler')
-const slug = require('slug')
-const {
+import prisma from '../config/db.config.js'
+import asyncHandler from 'express-async-handler'
+import slug from 'slug'
+import {
   selectQueries,
   commonFields,
   paginateWithSorting,
-} = require('../utils/metaData')
-const postValidator = require('../validators/postValidator')
+} from '../utils/metaData.js'
+import postValidator from '../validators/post.validator.js'
 
 /*
   @route    GET: /posts
@@ -95,4 +95,4 @@ const deletePost = asyncHandler(async (req, res, next) => {
   })
 })
 
-module.exports = { getPosts, createPost, deletePost }
+export { getPosts, createPost, deletePost }

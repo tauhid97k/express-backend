@@ -35,17 +35,16 @@ model users {
 }
 
 model personal_tokens {
-  id      Int @id @default(autoincrement())
-  user_id Int
-
-  user_device   String?
+  id            Int      @id @default(autoincrement())
+  user_id       Int
   refresh_token String
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 
   user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-  @@index([refresh_token], type: Hash)
+  @@index([user_id])
+  @@index([refresh_token])
 }
 
 model verification_tokens {
@@ -59,8 +58,8 @@ model verification_tokens {
 
   users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-  @@index([code], type: Hash)
-  @@index([token], type: Hash)
+  @@index([user_id])
+  @@index([code, token])
 }
 
 model user_roles {
@@ -70,6 +69,8 @@ model user_roles {
 
   users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
   roles roles @relation(fields: [role_id], references: [id])
+
+  @@index([role_id])
 }
 
 model role_permissions {
@@ -79,6 +80,8 @@ model role_permissions {
 
   roles       roles       @relation(fields: [role_id], references: [id], onDelete: Cascade)
   permissions permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+
+  @@index([role_id, permission_id])
 }
 
 model roles {
@@ -111,4 +114,6 @@ model posts {
   updated_at  DateTime   @updatedAt
 
   users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
 }

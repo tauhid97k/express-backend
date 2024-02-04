@@ -1,21 +1,20 @@
-const prisma = require('../utils/prisma')
-const bcrypt = require('bcrypt')
-const jwt = require('jsonwebtoken')
-const isEmpty = require('lodash/isEmpty')
-const asyncHandler = require('express-async-handler')
-const {
-  sendEmailVerifyCode,
-  sendPasswordResetCode,
-} = require('../utils/mailHandlers')
-const registerValidator = require('../validators/registerValidator')
-const loginValidator = require('../validators/loginValidator')
-const {
+import prisma from '../config/db.config.js'
+import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
+import asyncHandler from 'express-async-handler'
+import registerValidator from '../validators/register.validator.js'
+import loginValidator from '../validators/login.validator.js'
+import {
   emailVerifyValidator,
   passwordResetValidator,
   resetCodeVerifyValidator,
   passwordUpdateValidator,
-} = require('../validators/verificationValidators')
-const assignRole = require('../utils/assignRole')
+} from '../validators/verification.validator.js'
+import {
+  sendEmailVerifyCode,
+  sendPasswordResetCode,
+} from '../utils/mailHandlers.js'
+import assignRole from '../utils/assignRole.js'
 
 /*
   @route    POST: /register
@@ -29,76 +28,61 @@ const register = asyncHandler(async (req, res, next) => {
   data.password = await bcrypt.hash(data.password, 12)
 
   // Create new user
-  await prisma.$transaction(
-    async (tx) => {
-      const user = await tx.users.create({ data })
+  await prisma.$transaction(async (tx) => {
+    const user = await tx.users.create({ data })
 
-      // Assign a role (Default user)
-      const role = data.role ? data.role : 'user'
-      await assignRole(user.id, role, tx)
+    // Assign a role (Default user)
+    const role = data.role ? data.role : 'user'
+    await assignRole(user.id, role, tx)
 
-      // Send a verification code to email
-      const verificationCode = Math.floor(10000000 + Math.random() * 90000000)
-      await sendEmailVerifyCode(data.email, verificationCode, tx)
+    // Send a verification code to email
+    const verificationCode = Math.floor(10000000 + Math.random() * 90000000)
+    await sendEmailVerifyCode(data.email, verificationCode, tx)
 
-      // Login the user
-      // Generate JWT Access Token
-      const accessToken = jwt.sign(
-        {
-          user: {
-            email: user.email,
-          },
+    // Login the user
+    // Generate JWT Access Token
+    const accessToken = jwt.sign(
+      {
+        user: {
+          email: user.email,
         },
-        process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: '7h' }
-      )
+      },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: '7h' }
+    )
 
-      // Generate JWT Refresh Token
-      const refreshToken = jwt.sign(
-        {
-          user: {
-            email: user.email,
-          },
+    // Generate JWT Refresh Token
+    const refreshToken = jwt.sign(
+      {
+        user: {
+          email: user.email,
         },
-        process.env.REFRESH_TOKEN_SECRET,
-        { expiresIn: '7d' }
-      )
+      },
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: '7d' }
+    )
 
-      // Save refresh token to database with device model (if available)
-      const deviceBrand = isEmpty(req.device.device.brand)
-        ? ''
-        : req.device.device.brand
-      const deviceModel = isEmpty(req.device.device.model)
-        ? ''
-        : req.device.device.model
-      const deviceWithModel =
-        deviceBrand && deviceModel ? `${deviceBrand} ${deviceModel}` : 'unknown'
+    // Save to database
+    await tx.personal_tokens.create({
+      data: {
+        user_id: user.id,
+        refresh_token: refreshToken,
+      },
+    })
 
-      await tx.personal_tokens.create({
-        data: {
-          user_id: user.id,
-          refresh_token: refreshToken,
-          user_device: deviceWithModel,
-        },
-      })
+    // Create secure cookie with refresh token
+    res.cookie('express_jwt', refreshToken, {
+      httpOnly: true,
+      secure: false, // https
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    })
 
-      // Create secure cookie with refresh token
-      res.cookie('express_jwt', refreshToken, {
-        httpOnly: true, // Accessible only by server
-        secure: false, // https
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      })
-
-      res.status(201).json({
-        message: 'Account created',
-        accessToken,
-      })
-    },
-    {
-      timeout: 7000,
-    }
-  )
+    res.status(201).json({
+      message: 'Account registration successful',
+      accessToken,
+    })
+  })
 })
 
 /*
@@ -139,7 +123,7 @@ const resendEmail = asyncHandler(async (req, res, next) => {
   @desc     Verify Email
 */
 const verifyEmail = asyncHandler(async (req, res, next) => {
-  const { token, code } = await emailVerifyValidator.validate(req.body, {
+  const { code, token } = await emailVerifyValidator.validate(req.body, {
     abortEarly: false,
   })
 
@@ -148,7 +132,7 @@ const verifyEmail = asyncHandler(async (req, res, next) => {
   await prisma.$transaction(async (tx) => {
     const checkVerifyCode = await tx.verification_tokens.findFirst({
       where: {
-        AND: [{ token }, { code }],
+        AND: [{ code }, { token }],
       },
     })
 
@@ -240,27 +224,16 @@ const login = asyncHandler(async (req, res, next) => {
         { expiresIn: '7d' }
       )
 
-      // Save refresh token to database with device model (if available)
-      const deviceBrand = isEmpty(req.device.device.brand)
-        ? ''
-        : req.device.device.brand
-      const deviceModel = isEmpty(req.device.device.model)
-        ? ''
-        : req.device.device.model
-      const deviceWithModel =
-        deviceBrand && deviceModel ? `${deviceBrand} ${deviceModel}` : 'unknown'
-
       await tx.personal_tokens.create({
         data: {
           user_id: user.id,
           refresh_token: refreshToken,
-          user_device: deviceWithModel,
         },
       })
 
       // Create secure cookie with refresh token
       res.cookie('express_jwt', refreshToken, {
-        httpOnly: true, // Accessible only by server
+        httpOnly: true,
         secure: false, // https
         sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
@@ -331,7 +304,7 @@ const refreshAuthToken = asyncHandler(async (req, res, next) => {
     )
 
     // Don't let go further
-    return res.status(403).json({ message: 'Forbidden' })
+    return res.status(401).json({ message: 'Unauthorized' })
   }
 
   // If token exist, verify the token
@@ -384,7 +357,7 @@ const refreshAuthToken = asyncHandler(async (req, res, next) => {
 
       // Create new secure cookie with refresh token
       res.cookie('express_jwt', newRefreshToken, {
-        httpOnly: true, // Accessible only by server
+        httpOnly: true,
         secure: false, // https
         sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
@@ -393,15 +366,6 @@ const refreshAuthToken = asyncHandler(async (req, res, next) => {
       res.json({ accessToken: newAccessToken })
     })
   )
-})
-
-/*
-  @route    GET: /user
-  @access   private
-  @desc     Auth user
-*/
-const authUser = asyncHandler(async (req, res, next) => {
-  res.json(req.user)
 })
 
 /*
@@ -438,54 +402,6 @@ const logout = asyncHandler(async (req, res, next) => {
 })
 
 /*
-  @route    POST: /logout-all
-  @access   private
-  @desc     Logout user's all devices
-*/
-const logoutAll = asyncHandler(async (req, res, next) => {
-  await prisma.$transaction(async (tx) => {
-    const cookies = req.cookies
-    if (!cookies?.express_jwt)
-      return res.status(401).json({ message: 'Unauthorized' })
-
-    const refreshToken = cookies.express_jwt
-
-    // Verify token
-    jwt.verify(
-      refreshToken,
-      process.env.REFRESH_TOKEN_SECRET,
-      asyncHandler(async (error, decoded) => {
-        if (error) return res.status(403).json({ message: 'Forbidden' })
-
-        const user = await tx.users.findUnique({
-          where: {
-            email: decoded.user.email,
-          },
-        })
-
-        // Delete refresh tokens from database
-        await tx.personal_tokens.deleteMany({
-          where: {
-            user_id: user.id,
-          },
-        })
-      })
-    )
-
-    // Clear cookie
-    res.clearCookie('express_jwt', {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-    })
-
-    res.json({
-      message: 'All devices are logged out',
-    })
-  })
-})
-
-/*
   @route    POST: /reset-password
   @access   public
   @desc     Request for resetting password
@@ -510,13 +426,13 @@ const resetPassword = asyncHandler(async (req, res, next) => {
   @desc     Verify password reset code
 */
 const verifyResetCode = asyncHandler(async (req, res, next) => {
-  const { token, code } = await resetCodeVerifyValidator.validate(req.body, {
+  const { code, token } = await resetCodeVerifyValidator.validate(req.body, {
     abortEarly: false,
   })
 
   const checkVerifyCode = await prisma.verification_tokens.findFirst({
     where: {
-      AND: [{ token }, { code }],
+      AND: [{ code }, { token }],
     },
   })
 
@@ -607,15 +523,13 @@ const updatePassword = asyncHandler(async (req, res, next) => {
   })
 })
 
-module.exports = {
+export {
   register,
   resendEmail,
   verifyEmail,
   login,
   refreshAuthToken,
-  authUser,
   logout,
-  logoutAll,
   resetPassword,
   verifyResetCode,
   updatePassword,

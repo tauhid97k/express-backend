@@ -1,5 +1,5 @@
-const yup = require('yup')
-const prisma = require('../utils/prisma')
+import * as yup from 'yup'
+import prisma from '../config/db.config.js'
 
 const loginValidator = yup.object({
   email: yup
@@ -19,4 +19,4 @@ const loginValidator = yup.object({
   password: yup.string().required('Password is required'),
 })
 
-module.exports = loginValidator
+export default loginValidator

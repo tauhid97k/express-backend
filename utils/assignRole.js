@@ -1,4 +1,4 @@
-const asyncHandler = require('express-async-handler')
+import asyncHandler from 'express-async-handler'
 
 const assignRole = asyncHandler(async (userId, roleName, tx) => {
   const role = await tx.roles.findUnique({
@@ -21,4 +21,4 @@ const assignRole = asyncHandler(async (userId, roleName, tx) => {
   })
 })
 
-module.exports = assignRole
+export default assignRole

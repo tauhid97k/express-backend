@@ -1,15 +1,16 @@
-const express = require('express')
-const router = express.Router()
-const authMiddleware = require('../middlewares/authMiddleware')
-const {
+import express from 'express'
+import authMiddleware from '../middlewares/auth.middleware.js'
+import {
   rolePermissions,
   createRolePermissions,
   updateRolePermissions,
-} = require('../controllers/rolePermissionsController')
+} from '../controllers/rolePermissions.controller.js'
 
 // Protected Routes
+const router = express.Router()
+
 router.get('/', authMiddleware(), rolePermissions)
 router.post('/', authMiddleware(), createRolePermissions)
 router.put('/', authMiddleware(), updateRolePermissions)
 
-module.exports = router
+export default router

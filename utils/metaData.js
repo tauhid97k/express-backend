@@ -32,8 +32,4 @@ const paginateWithSorting = (options) => {
   }
 }
 
-module.exports = {
-  selectQueries,
-  commonFields,
-  paginateWithSorting,
-}
+export { selectQueries, commonFields, paginateWithSorting }

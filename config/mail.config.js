@@ -1,6 +1,6 @@
-const { createTransport } = require('nodemailer')
+import { createTransport } from 'nodemailer'
 
-module.exports = createTransport({
+export default createTransport({
   host: process.env.MAIL_HOST,
   port: process.env.MAIL_PORT,
   auth: {

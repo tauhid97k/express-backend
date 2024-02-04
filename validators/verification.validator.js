@@ -1,11 +1,11 @@
-const yup = require('yup')
-const prisma = require('../utils/prisma')
+import * as yup from 'yup'
+import prisma from '../config/db.config.js'
 
 const emailVerifyValidator = yup.object({
   code: yup
     .number()
     .required('Code is required')
-    .typeError('Code Must be a number'),
+    .typeError('Code must be a number'),
   token: yup.string().required('Token is required'),
 })
 
@@ -21,8 +21,7 @@ const passwordResetValidator = yup.object({
         },
       })
 
-      if (email) return true
-      else return false
+      return !!email
     }),
 })
 
@@ -30,7 +29,7 @@ const resetCodeVerifyValidator = yup.object({
   code: yup
     .number()
     .required('Code is required')
-    .typeError('Code Must be a number'),
+    .typeError('Code must be a number'),
   token: yup.string().required('Token is required'),
 })
 
@@ -41,7 +40,7 @@ const passwordUpdateValidator = yup.object({
     .min(8, 'Password must be at least 8 characters'),
 })
 
-module.exports = {
+export {
   emailVerifyValidator,
   passwordResetValidator,
   resetCodeVerifyValidator,

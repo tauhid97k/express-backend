@@ -1,9 +1,9 @@
-const prisma = require('../utils/prisma')
-const asyncHandler = require('express-async-handler')
-const {
+import prisma from '../config/db.config.js'
+import asyncHandler from 'express-async-handler'
+import {
   rolePermissionsValidator,
   updateRolePermissionsValidator,
-} = require('../validators/rolePermissionsValidator')
+} from '../validators/rolePermissions.validator.js'
 
 /*
   @route    GET: /role-permissions
@@ -21,7 +21,7 @@ const rolePermissions = asyncHandler(async (req, res, next) => {
     },
   })
 
-  const formattedRolePermissions = rolePermissions.map(
+  const formatRolePermissions = rolePermissions.map(
     ({ id, name, created_at, updated_at, role_permissions }) => {
       return {
         id,
@@ -35,7 +35,7 @@ const rolePermissions = asyncHandler(async (req, res, next) => {
     }
   )
 
-  res.json(formattedRolePermissions)
+  res.json(formatRolePermissions)
 })
 
 /*
@@ -60,13 +60,13 @@ const createRolePermissions = asyncHandler(async (req, res, next) => {
     })
 
     // Format Role and Permissions for Database
-    const formattedRolePermissions = permissions.map((permission) => {
+    const formatRolePermissions = permissions.map((permission) => {
       return { role_id: addRole.id, permission_id: permission }
     })
 
     // Create Role and their permissions
     await tx.role_permissions.createMany({
-      data: formattedRolePermissions,
+      data: formatRolePermissions,
     })
 
     res.json({ message: 'Role and permissions are created' })
@@ -101,13 +101,13 @@ const updateRolePermissions = asyncHandler(async (req, res, next) => {
     })
 
     // Format Role and Permissions for Database
-    const formattedRolePermissions = permissions.map((permission) => {
+    const formatRolePermissions = permissions.map((permission) => {
       return { role_id: findRole.id, permission_id: permission }
     })
 
     // Recreate selected role index and update/create permissions
     await tx.role_permissions.createMany({
-      data: formattedRolePermissions,
+      data: formatRolePermissions,
     })
 
     res.json({
@@ -116,8 +116,4 @@ const updateRolePermissions = asyncHandler(async (req, res, next) => {
   })
 })
 
-module.exports = {
-  rolePermissions,
-  createRolePermissions,
-  updateRolePermissions,
-}
+export { rolePermissions, createRolePermissions, updateRolePermissions }

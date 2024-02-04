@@ -45,4 +45,4 @@ const globalError = (error, req, res, next) => {
   }
 }
 
-module.exports = { urlNotFoundError, globalError }
+export { urlNotFoundError, globalError }

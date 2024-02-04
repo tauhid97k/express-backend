@@ -1,8 +1,8 @@
-const mailTransporter = require('../config/emailConfig')
-const asyncHandler = require('express-async-handler')
-const prisma = require('./prisma')
-const { v4: uuidv4 } = require('uuid')
-const dayjs = require('dayjs')
+import mailTransporter from '../config/mail.config.js'
+import asyncHandler from 'express-async-handler'
+import prisma from '../config/db.config.js'
+import { v4 as uuidv4 } from 'uuid'
+import dayjs from 'dayjs'
 
 const sendEmailVerifyCode = asyncHandler(async (email, code, tx) => {
   // Create email verify token
@@ -58,4 +58,4 @@ const sendPasswordResetCode = asyncHandler(async (email, code) => {
   })
 })
 
-module.exports = { sendEmailVerifyCode, sendPasswordResetCode }
+export { sendEmailVerifyCode, sendPasswordResetCode }

@@ -1,6 +1,6 @@
-const jwt = require('jsonwebtoken')
-const prisma = require('../utils/prisma')
-const { formatDate } = require('../utils/transformData')
+import jwt from 'jsonwebtoken'
+import prisma from '../config/db.config.js'
+import { formatDate } from '../utils/transformData.js'
 
 const authMiddleware = (requiredPermission) => {
   return async (req, res, next) => {
@@ -18,9 +18,10 @@ const authMiddleware = (requiredPermission) => {
       async (error, decoded) => {
         if (error) return res.status(403).json({ message: 'Forbidden' })
 
+        const email = decoded.user.email
         const user = await prisma.users.findUnique({
           where: {
-            email: decoded.user.email,
+            email,
           },
           include: {
             user_roles: {
@@ -41,7 +42,7 @@ const authMiddleware = (requiredPermission) => {
 
         // Check if user exists in the database
         if (!user) {
-          return res.status(401).status(401).json({ message: 'Unauthorized' })
+          return res.status(401).json({ message: 'Unauthorized' })
         }
 
         // Check if user is suspended
@@ -50,12 +51,12 @@ const authMiddleware = (requiredPermission) => {
         }
 
         // Check if user is verified
-        if (!user.email_verified_at) {
-          return res.status(423).json({ message: 'You must verify your email' })
-        }
+        // if (!user.email_verified_at) {
+        //   return res.status(423).json({ message: 'You must verify your email' })
+        // }
 
         // Format User Data
-        const formattedUser = {
+        const formatUser = {
           id: user.id,
           name: user.name,
           email: user.email,
@@ -68,13 +69,13 @@ const authMiddleware = (requiredPermission) => {
         }
 
         // Format dates
-        formattedUser.email_verified_at = formatDate(user.email_verified_at)
-        formattedUser.created_at = formatDate(user.created_at)
+        formatUser.email_verified_at = formatDate(user.email_verified_at)
+        formatUser.created_at = formatDate(user.created_at)
 
         // Check if user has the required permission
         if (
           requiredPermission &&
-          !formattedUser.permissions.includes(requiredPermission)
+          !formatUser.permissions.includes(requiredPermission)
         ) {
           return res.status(403).json({
             message: 'Permission denied',
@@ -82,7 +83,7 @@ const authMiddleware = (requiredPermission) => {
         }
 
         // Save user
-        req.user = formattedUser
+        req.user = formatUser
 
         next()
       }
@@ -90,4 +91,4 @@ const authMiddleware = (requiredPermission) => {
   }
 }
 
-module.exports = authMiddleware
+export default authMiddleware

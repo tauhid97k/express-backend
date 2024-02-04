@@ -1,5 +1,5 @@
-const yup = require('yup')
-const prisma = require('../utils/prisma')
+import * as yup from 'yup'
+import prisma from '../config/db.config.js'
 
 const registerValidator = yup.object({
   name: yup.string().required('Name is required'),
@@ -7,15 +7,14 @@ const registerValidator = yup.object({
     .string()
     .required('Email is required')
     .email('Email is invalid')
-    .test('unique', 'Email already exist', async (value) => {
+    .test('unique', 'Email already exists', async (value) => {
       const email = await prisma.users.findUnique({
         where: {
           email: value,
         },
       })
 
-      if (email) return false
-      else return true
+      return !email
     }),
   password: yup
     .string()
@@ -24,4 +23,4 @@ const registerValidator = yup.object({
   role: yup.string().optional(),
 })
 
-module.exports = registerValidator
+export default registerValidator
