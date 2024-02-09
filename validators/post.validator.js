@@ -6,13 +6,13 @@ const postValidator = yup.object({
     .string()
     .required('Post title is required')
     .test('unique', 'Post title already exists', async (value) => {
-      const post = await prisma.posts.findUnique({
+      const postTitle = await prisma.posts.findUnique({
         where: {
           title: value,
         },
       })
 
-      return !post
+      return postTitle ? false : true
     }),
   slug: yup.string().optional(),
   description: yup.string().required('Description is required'),

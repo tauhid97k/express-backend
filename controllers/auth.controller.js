@@ -10,11 +10,8 @@ import {
   resetCodeVerifyValidator,
   passwordUpdateValidator,
 } from '../validators/verification.validator.js'
-import {
-  sendEmailVerifyCode,
-  sendPasswordResetCode,
-} from '../utils/mailHandlers.js'
 import assignRole from '../utils/assignRole.js'
+import emailEventEmitter from '../events/sendEmail.event.js'
 
 /*
   @route    POST: /register
@@ -37,7 +34,11 @@ const register = asyncHandler(async (req, res, next) => {
 
     // Send a verification code to email
     const verificationCode = Math.floor(10000000 + Math.random() * 90000000)
-    await sendEmailVerifyCode(data.email, verificationCode, tx)
+    console.log('Event is emitting')
+    emailEventEmitter.emit('verificationEmail', {
+      email: user.email,
+      code: verificationCode,
+    })
 
     // Login the user
     // Generate JWT Access Token
@@ -109,7 +110,10 @@ const resendEmail = asyncHandler(async (req, res, next) => {
       },
     })
 
-    await sendEmailVerifyCode(user.email, verificationCode, tx)
+    emailEventEmitter.emit('verificationEmail', {
+      email: user.email,
+      code: verificationCode,
+    })
   })
 
   res.json({
@@ -413,7 +417,10 @@ const resetPassword = asyncHandler(async (req, res, next) => {
 
   // Send a password reset code to email
   const resetCode = Math.floor(10000000 + Math.random() * 90000000)
-  await sendPasswordResetCode(data.email, resetCode)
+  emailEventEmitter.emit('passwordResetEmail', {
+    email: data.email,
+    code: resetCode,
+  })
 
   res.json({
     message: 'A verification code has been sent to your email',

@@ -13,8 +13,7 @@ const loginValidator = yup.object({
         },
       })
 
-      if (email) return true
-      else return false
+      return email ? true : false
     }),
   password: yup.string().required('Password is required'),
 })

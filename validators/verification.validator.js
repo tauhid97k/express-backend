@@ -21,7 +21,7 @@ const passwordResetValidator = yup.object({
         },
       })
 
-      return !!email
+      return email ? true : false
     }),
 })
 

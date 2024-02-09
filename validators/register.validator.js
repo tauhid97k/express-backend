@@ -14,7 +14,7 @@ const registerValidator = yup.object({
         },
       })
 
-      return !email
+      return email ? false : true
     }),
   password: yup
     .string()

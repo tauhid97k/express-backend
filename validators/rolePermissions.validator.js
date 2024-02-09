@@ -12,7 +12,7 @@ const rolePermissionsValidator = yup.object({
         },
       })
 
-      return !role
+      return role ? false : true
     }),
   permissions: yup
     .array(yup.number().typeError('Permission must be an id'))
@@ -41,7 +41,7 @@ const updateRolePermissionsValidator = yup.object({
         },
       })
 
-      return !!role
+      return role ? true : false
     }),
   permissions: yup
     .array(yup.number().typeError('Permission must be an id'))
