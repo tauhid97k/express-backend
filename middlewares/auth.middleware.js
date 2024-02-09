@@ -69,7 +69,10 @@ const authMiddleware = (requiredPermission) => {
         }
 
         // Format dates
-        formatUser.email_verified_at = formatDate(user.email_verified_at)
+        const emailVerifiedAt = formatUser.email_verified_at
+        formatUser.email_verified_at = emailVerifiedAt
+          ? formatDate(emailVerifiedAt)
+          : emailVerifiedAt
         formatUser.created_at = formatDate(user.created_at)
 
         // Check if user has the required permission
