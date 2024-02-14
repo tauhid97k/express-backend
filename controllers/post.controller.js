@@ -54,7 +54,7 @@ const getPosts = asyncHandler(async (req, res, next) => {
     thumbnail: generateFileLink(`posts/${post.thumbnail}`),
   }))
 
-  return res.json({
+  res.json({
     data: formatPosts,
     meta: {
       page,
@@ -62,6 +62,31 @@ const getPosts = asyncHandler(async (req, res, next) => {
       total,
     },
   })
+})
+
+/*
+  @route    GET: /posts/:id
+  @access   private
+  @desc     Get post details
+*/
+const getPost = asyncHandler(async (req, res, next) => {
+  const id = Number(req.params.id)
+
+  const findPost = await prisma.posts.findUnique({
+    where: {
+      id,
+    },
+  })
+
+  if (!findPost) {
+    return res.status(404).json({
+      message: 'No post found',
+    })
+  }
+
+  findPost.thumbnail = generateFileLink(`posts/${post.thumbnail}`)
+
+  res.json(findPost)
 })
 
 /*
@@ -210,4 +235,4 @@ const deletePost = asyncHandler(async (req, res, next) => {
   })
 })
 
-export { getPosts, createPost, deletePost }
+export { getPosts, getPost, createPost, updatePost, deletePost }
