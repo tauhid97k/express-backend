@@ -103,6 +103,70 @@ const createPost = asyncHandler(async (req, res, next) => {
 })
 
 /*
+  @route    PUT: /posts/:id
+  @access   private
+  @desc     Update a post
+*/
+const updatePost = asyncHandler(async (req, res, next) => {
+  const id = Number(req.params.id)
+
+  const data = await postValidator.validate(req.body, { abortEarly: false })
+  const { thumbnail } = await postThumbnailValidator.validate(req.files, {
+    abortEarly: false,
+  })
+
+  await prisma.$transaction(async (tx) => {
+    // Find the post
+    const findPost = await tx.posts.findUnique({
+      where: {
+        id,
+      },
+    })
+
+    if (!findPost) {
+      return res.status(404).json({
+        message: 'No post found',
+      })
+    }
+
+    // Delete Previous Thumbnail
+    try {
+      const thumbnailDir = `uploads/posts/${findPost.thumbnail.split('/')[0]}`
+      await fs.rm(thumbnailDir, { recursive: true })
+    } catch (error) {
+      return res.json({
+        message: 'Error deleting previous thumbnail',
+      })
+    }
+
+    // Add New thumbnail
+    const uniqueFolder = `post_${uuidV4()}_${new Date() * 1000}`
+    const uploadPath = `uploads/posts/${uniqueFolder}/${thumbnail.name}`
+    const filePathToSave = `${uniqueFolder}/${thumbnail.name}`
+
+    thumbnail.mv(uploadPath, (error) => {
+      if (error)
+        return res.status(500).json({
+          message: 'Error saving thumbnail',
+        })
+    })
+
+    // Add generated file path
+    data.thumbnail = filePathToSave
+
+    // Save to database
+    await tx.posts.update({
+      where: {
+        id,
+      },
+      data: { ...data, user_id: 1 },
+    })
+
+    res.json({ message: 'Post updated successfully' })
+  })
+})
+
+/*
   @route    DELETE: /posts/:id
   @access   private
   @desc     Delete a post
@@ -110,14 +174,39 @@ const createPost = asyncHandler(async (req, res, next) => {
 const deletePost = asyncHandler(async (req, res, next) => {
   const id = req.params.id
 
-  await prisma.posts.delete({
-    where: {
-      id: Number(id),
-    },
-  })
+  await prisma.$transaction(async (tx) => {
+    // Find Post
+    const findPost = await tx.posts.findUnique({
+      where: {
+        id,
+      },
+    })
 
-  res.status(201).json({
-    message: 'Post is deleted',
+    if (!findPost) {
+      return res.status(404).json({
+        message: 'No post found',
+      })
+    }
+
+    // Delete Thumbnail
+    try {
+      const thumbnailDir = `uploads/posts/${findPost.thumbnail.split('/')[0]}`
+      await fs.rm(thumbnailDir, { recursive: true })
+    } catch (error) {
+      return res.json({
+        message: 'Error deleting thumbnail',
+      })
+    }
+
+    await tx.posts.delete({
+      where: {
+        id,
+      },
+    })
+
+    res.json({
+      message: 'Post deleted successfully',
+    })
   })
 })
 
