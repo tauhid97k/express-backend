@@ -3,6 +3,7 @@ import { rateLimit } from 'express-rate-limit'
 import cors from 'cors'
 import helmet from 'helmet'
 import cookieParser from 'cookie-parser'
+import expressFileUploader from 'express-fileupload'
 import allRoutes from './routes/index.js'
 import {
   urlNotFoundError,
@@ -44,6 +45,24 @@ app.use(limiter)
 app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+
+// File Upload/Serve Middleware
+app.use(
+  expressFileUploader({
+    createParentPath: true,
+  })
+)
+app.use(
+  '/uploads',
+  (req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*')
+    res.header('Access-Control-Expose-Headers', 'Content-Disposition')
+    res.header('Cross-Origin-Resource-Policy', 'cross-origin')
+
+    next()
+  },
+  express.static('uploads')
+)
 
 // All Routes
 app.use('/api', allRoutes)

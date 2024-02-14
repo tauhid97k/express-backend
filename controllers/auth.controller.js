@@ -34,7 +34,6 @@ const register = asyncHandler(async (req, res, next) => {
 
     // Send a verification code to email
     const verificationCode = Math.floor(10000000 + Math.random() * 90000000)
-    console.log('Event is emitting')
     emailEventEmitter.emit('verificationEmail', {
       email: user.email,
       code: verificationCode,

@@ -108,7 +108,8 @@ model posts {
   user_id     Int
   title       String     @unique
   slug        String
-  description String     @db.Text
+  description String
+  thumbnail   String?
   status      PostStatus
   created_at  DateTime   @default(now())
   updated_at  DateTime   @updatedAt

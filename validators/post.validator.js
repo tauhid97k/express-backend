@@ -16,10 +16,30 @@ const postValidator = yup.object({
     }),
   slug: yup.string().optional(),
   description: yup.string().required('Description is required'),
+  thumbnail: yup.string().optional(),
   status: yup
     .string()
     .required('Status is required')
     .oneOf(['DRAFT', 'PUBLISHED', 'UNPUBLISHED']),
 })
 
-export default postValidator
+const postThumbnailValidator = yup
+  .object({
+    thumbnail: yup
+      .mixed()
+      .test(
+        'type',
+        'Invalid file type. Only JPG, JPEG, and PNG are allowed',
+        (file) => {
+          const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png']
+          return allowedTypes.includes(file.mimetype)
+        }
+      )
+      .test('size', 'File size is too large; max 2mb is allowed', (file) => {
+        const maxSize = 2 * 1024 * 1024
+        return file.size <= maxSize
+      }),
+  })
+  .required('Thumbnail is required')
+
+export { postValidator, postThumbnailValidator }

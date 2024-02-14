@@ -6,7 +6,12 @@ import {
   commonFields,
   paginateWithSorting,
 } from '../utils/metaData.js'
-import postValidator from '../validators/post.validator.js'
+import {
+  postThumbnailValidator,
+  postValidator,
+} from '../validators/post.validator.js'
+import { v4 as uuidV4 } from 'uuid'
+import generateFileLink from '../utils/generateFileLink.js'
 
 /*
   @route    GET: /posts
@@ -43,8 +48,14 @@ const getPosts = asyncHandler(async (req, res, next) => {
     }),
   ])
 
+  // Generate thumbnail url
+  const formatPosts = posts.map((post) => ({
+    ...post,
+    thumbnail: generateFileLink(`posts/${post.thumbnail}`),
+  }))
+
   return res.json({
-    data: posts,
+    data: formatPosts,
     meta: {
       page,
       limit: take,
@@ -60,15 +71,30 @@ const getPosts = asyncHandler(async (req, res, next) => {
 */
 const createPost = asyncHandler(async (req, res, next) => {
   const data = await postValidator.validate(req.body, { abortEarly: false })
+  const { thumbnail } = await postThumbnailValidator.validate(req.files, {
+    abortEarly: false,
+  })
 
-  // Auth User
-  const user = req.user
+  // Thumbnail
+  const uniqueFolder = `post_${uuidV4()}_${new Date() * 1000}`
+  const uploadPath = `uploads/posts/${uniqueFolder}/${thumbnail.name}`
+  const filePathToSave = `${uniqueFolder}/${thumbnail.name}`
+
+  thumbnail.mv(uploadPath, (error) => {
+    if (error)
+      return res.status(500).json({
+        message: 'Error saving thumbnail',
+      })
+  })
+
+  // Save file path to database
+  data.thumbnail = filePathToSave
 
   // Slugify post title for slug
   data.slug = slug(data.title)
 
   await prisma.posts.create({
-    data: { ...data, user_id: user.id },
+    data: { ...data, user_id: 1 },
   })
 
   res.status(201).json({
