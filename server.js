@@ -58,6 +58,7 @@ app.use(
     res.header('Access-Control-Allow-Origin', '*')
     res.header('Access-Control-Expose-Headers', 'Content-Disposition')
     res.header('Cross-Origin-Resource-Policy', 'cross-origin')
+    res.header('Content-Disposition', 'attachment')
 
     next()
   },
