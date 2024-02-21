@@ -1,6 +1,9 @@
 import prisma from '../config/db.config.js'
 import asyncHandler from 'express-async-handler'
 import slug from 'slug'
+import { v4 as uuidV4 } from 'uuid'
+import generateFileLink from '../utils/generateFileLink.js'
+import fs from 'node:fs/promises'
 import {
   selectQueries,
   commonFields,
@@ -10,8 +13,6 @@ import {
   postThumbnailValidator,
   postValidator,
 } from '../validators/post.validator.js'
-import { v4 as uuidV4 } from 'uuid'
-import generateFileLink from '../utils/generateFileLink.js'
 
 /*
   @route    GET: /posts
@@ -151,6 +152,13 @@ const updatePost = asyncHandler(async (req, res, next) => {
     if (!findPost) {
       return res.status(404).json({
         message: 'No post found',
+      })
+    }
+
+    // Check authorization
+    if (findPost.user_id !== req.user.id) {
+      return res.status(403).json({
+        message: 'You are not authorized to modify the post',
       })
     }
 

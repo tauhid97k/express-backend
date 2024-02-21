@@ -1,4 +1,5 @@
 import express from 'express'
+const router = express.Router()
 import authMiddleware from '../middlewares/auth.middleware.js'
 import {
   getPosts,
@@ -8,9 +9,7 @@ import {
   deletePost,
 } from '../controllers/post.controller.js'
 
-const router = express.Router()
-
-router.get('/', authMiddleware(), getPosts)
+router.get('/', getPosts)
 router.get('/:id', authMiddleware(), getPost)
 router.post('/', authMiddleware(), createPost)
 router.put('/:id', authMiddleware(), updatePost)
