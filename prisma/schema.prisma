@@ -108,13 +108,14 @@ model posts {
   user_id     Int
   title       String     @unique
   slug        String
+  summary     String
   description String
   thumbnail   String?
   status      PostStatus
   created_at  DateTime   @default(now())
   updated_at  DateTime   @updatedAt
 
-  users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id])
   @@index([slug])

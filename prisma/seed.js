@@ -26,8 +26,9 @@ for (let i = 0; i <= 50; i++) {
     user_id: 1,
     title: faker.lorem.sentence(),
     slug: faker.lorem.slug(),
+    summary: faker.lorem.sentences(),
     description: faker.lorem.paragraph(),
-    status: faker.helpers.arrayElement(['DRAFT', 'PUBLISHED', 'UNPUBLISHED']),
+    status: faker.helpers.arrayElement(['DRAFT', 'PUBLISHED', 'ARCHIVED']),
   }
 
   posts.push(postObject)

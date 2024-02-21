@@ -21,31 +21,42 @@ import {
 */
 const getPosts = asyncHandler(async (req, res, next) => {
   const selectedQueries = selectQueries(req.query, commonFields)
-  let { search } = selectedQueries
   const { page, take, skip, orderBy } = paginateWithSorting(selectedQueries)
 
+  let { search } = selectedQueries
   search = search ? search : null
+
   const [posts, total] = await prisma.$transaction([
     prisma.posts.findMany({
-      where: search
-        ? {
-            title: {
-              contains: search,
-            },
-          }
-        : {},
+      where: {
+        AND: [
+          { status: 'PUBLISHED' },
+          search
+            ? {
+                title: {
+                  contains: search,
+                },
+              }
+            : {},
+        ],
+      },
       take,
       skip,
       orderBy,
     }),
     prisma.posts.count({
-      where: search
-        ? {
-            title: {
-              contains: search,
-            },
-          }
-        : {},
+      where: {
+        AND: [
+          { status: 'PUBLISHED' },
+          search
+            ? {
+                title: {
+                  contains: search,
+                },
+              }
+            : {},
+        ],
+      },
     }),
   ])
 
@@ -66,16 +77,16 @@ const getPosts = asyncHandler(async (req, res, next) => {
 })
 
 /*
-  @route    GET: /posts/:id
+  @route    GET: /posts/:slug
   @access   private
   @desc     Get post details
 */
 const getPost = asyncHandler(async (req, res, next) => {
-  const id = Number(req.params.id)
+  const slug = req.params.slug
 
-  const findPost = await prisma.posts.findUnique({
+  const findPost = await prisma.posts.findFirst({
     where: {
-      id,
+      slug,
     },
   })
 
@@ -129,12 +140,13 @@ const createPost = asyncHandler(async (req, res, next) => {
 })
 
 /*
-  @route    PUT: /posts/:id
+  @route    PUT: /posts/:slug
   @access   private
   @desc     Update a post
 */
 const updatePost = asyncHandler(async (req, res, next) => {
-  const id = Number(req.params.id)
+  const slug = req.params.slug
+  const userId = req.user.id
 
   const data = await postValidator.validate(req.body, { abortEarly: false })
   const { thumbnail } = await postThumbnailValidator.validate(req.files, {
@@ -143,9 +155,9 @@ const updatePost = asyncHandler(async (req, res, next) => {
 
   await prisma.$transaction(async (tx) => {
     // Find the post
-    const findPost = await tx.posts.findUnique({
+    const findPost = await tx.posts.findFirst({
       where: {
-        id,
+        slug,
       },
     })
 
@@ -156,7 +168,7 @@ const updatePost = asyncHandler(async (req, res, next) => {
     }
 
     // Check authorization
-    if (findPost.user_id !== req.user.id) {
+    if (findPost.user_id !== userId) {
       return res.status(403).json({
         message: 'You are not authorized to modify the post',
       })
@@ -190,9 +202,9 @@ const updatePost = asyncHandler(async (req, res, next) => {
     // Save to database
     await tx.posts.update({
       where: {
-        id,
+        slug,
       },
-      data: { ...data, user_id: 1 },
+      data: { ...data, user_id: userId },
     })
 
     res.json({ message: 'Post updated successfully' })
@@ -200,18 +212,18 @@ const updatePost = asyncHandler(async (req, res, next) => {
 })
 
 /*
-  @route    DELETE: /posts/:id
+  @route    DELETE: /posts/:slug
   @access   private
   @desc     Delete a post
 */
 const deletePost = asyncHandler(async (req, res, next) => {
-  const id = req.params.id
+  const slug = req.params.slug
 
   await prisma.$transaction(async (tx) => {
     // Find Post
-    const findPost = await tx.posts.findUnique({
+    const findPost = await tx.posts.findFirst({
       where: {
-        id,
+        slug,
       },
     })
 
@@ -233,7 +245,7 @@ const deletePost = asyncHandler(async (req, res, next) => {
 
     await tx.posts.delete({
       where: {
-        id,
+        slug,
       },
     })
 

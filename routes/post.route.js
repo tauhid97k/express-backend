@@ -10,9 +10,9 @@ import {
 } from '../controllers/post.controller.js'
 
 router.get('/', getPosts)
-router.get('/:id', authMiddleware(), getPost)
+router.get('/:slug', authMiddleware(), getPost)
 router.post('/', authMiddleware(), createPost)
-router.put('/:id', authMiddleware(), updatePost)
-router.delete('/:id', authMiddleware(), deletePost)
+router.put('/:slug', authMiddleware(), updatePost)
+router.delete('/:slug', authMiddleware(), deletePost)
 
 export default router

@@ -14,13 +14,14 @@ const postValidator = yup.object({
 
       return postTitle ? false : true
     }),
-  slug: yup.string().optional(),
+  slug: yup.string().required('Slug is required'),
+  summary: yup.string().required('Summary is required'),
   description: yup.string().required('Description is required'),
   thumbnail: yup.string().optional(),
   status: yup
     .string()
     .required('Status is required')
-    .oneOf(['DRAFT', 'PUBLISHED', 'UNPUBLISHED']),
+    .oneOf(['DRAFT', 'PUBLISHED', 'ARCHIVED']),
 })
 
 const postThumbnailValidator = yup
