@@ -218,6 +218,7 @@ const updatePost = asyncHandler(async (req, res, next) => {
 */
 const deletePost = asyncHandler(async (req, res, next) => {
   const slug = req.params.slug
+  const userId = req.user.id
 
   await prisma.$transaction(async (tx) => {
     // Find Post
@@ -230,6 +231,13 @@ const deletePost = asyncHandler(async (req, res, next) => {
     if (!findPost) {
       return res.status(404).json({
         message: 'No post found',
+      })
+    }
+
+    // Check authorization
+    if (findPost.user_id !== userId) {
+      return res.status(403).json({
+        message: 'You are not authorized to modify the post',
       })
     }
 
