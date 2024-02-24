@@ -28,35 +28,25 @@ const getPosts = asyncHandler(async (req, res, next) => {
 
   const [posts, total] = await prisma.$transaction([
     prisma.posts.findMany({
-      where: {
-        AND: [
-          { status: 'PUBLISHED' },
-          search
-            ? {
-                title: {
-                  contains: search,
-                },
-              }
-            : {},
-        ],
-      },
+      where: search
+        ? {
+            title: {
+              contains: search,
+            },
+          }
+        : {},
       take,
       skip,
       orderBy,
     }),
     prisma.posts.count({
-      where: {
-        AND: [
-          { status: 'PUBLISHED' },
-          search
-            ? {
-                title: {
-                  contains: search,
-                },
-              }
-            : {},
-        ],
-      },
+      where: search
+        ? {
+            title: {
+              contains: search,
+            },
+          }
+        : {},
     }),
   ])
 
@@ -170,7 +160,7 @@ const updatePost = asyncHandler(async (req, res, next) => {
     // Check authorization
     if (findPost.user_id !== userId) {
       return res.status(403).json({
-        message: 'You are not authorized to modify the post',
+        message: 'You are unauthorized',
       })
     }
 

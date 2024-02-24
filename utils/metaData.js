@@ -17,7 +17,7 @@ const commonFields = ['search', 'page', 'limit', 'sortBy', 'sortOrder']
 // Pagination and sorting functionalities
 const paginateWithSorting = (options) => {
   const page = Number(options.page <= 0 ? 1 : options.page || 1)
-  const take = Number(options.limit || 15)
+  const take = Number(options.limit || 20)
   const skip = (page - 1) * take
   const sortBy = options.sortBy || 'id'
   const sortOrder = options.sortOrder || 'desc'
