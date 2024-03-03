@@ -166,7 +166,7 @@ const updateRolePermissions = asyncHandler(async (req, res, next) => {
   })
 })
 
-module.exports = {
+export {
   getRoles,
   getPermissions,
   getRolePermissions,
