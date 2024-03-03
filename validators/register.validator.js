@@ -20,7 +20,20 @@ const registerValidator = yup.object({
     .string()
     .required('Password is required')
     .min(8, 'Password must be at least 8 characters'),
-  role: yup.string().optional(),
+  role: yup
+    .string()
+    .optional()
+    .test('exist', 'Role does not exist', async (value) => {
+      if (!value) return true
+
+      const findRole = await prisma.roles.findUnique({
+        where: {
+          name: value,
+        },
+      })
+
+      return findRole ? true : false
+    }),
 })
 
 export default registerValidator

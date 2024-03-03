@@ -9,13 +9,21 @@ const roles = [{ name: 'admin' }, { name: 'user' }]
 // Create a few permissions
 const permissions = [
   { name: 'view_users', group: 'users' },
-  { name: 'create_users', group: 'users' },
-  { name: 'update_users', group: 'users' },
-  { name: 'delete_users', group: 'users' },
+  { name: 'create_user', group: 'users' },
+  { name: 'edit_user', group: 'users' },
+  { name: 'update_user', group: 'users' },
+  { name: 'delete_user', group: 'users' },
   { name: 'view_posts', group: 'posts' },
-  { name: 'create_posts', group: 'posts' },
-  { name: 'update_posts', group: 'posts' },
-  { name: 'delete_posts', group: 'posts' },
+  { name: 'create_post', group: 'posts' },
+  { name: 'edit_post', group: 'posts' },
+  { name: 'update_post', group: 'posts' },
+  { name: 'delete_post', group: 'posts' },
+  { name: 'view_role_permissions', group: 'role_permissions' },
+  { name: 'create_role_permissions', group: 'role_permissions' },
+  { name: 'update_role_permissions', group: 'role_permissions' },
+  { name: 'delete_role_permissions', group: 'role_permissions' },
+  { name: 'view_settings', group: 'settings' },
+  { name: 'update_settings', group: 'settings' },
 ]
 
 // Create a few posts
@@ -67,7 +75,7 @@ async function main() {
       })
 
       // Assign role
-      await assignRole(user.id, 'user', tx)
+      await assignRole(user.id, 'admin', tx)
     })
 
     // Create posts

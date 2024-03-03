@@ -2,11 +2,11 @@ import prisma from '../config/db.config.js'
 import asyncHandler from 'express-async-handler'
 import slug from 'slug'
 import { v4 as uuidV4 } from 'uuid'
-import generateFileLink from '../utils/generateFileLink.js'
 import fs from 'node:fs/promises'
+import generateFileLink from '../utils/generateFileLink.js'
 import {
   selectQueries,
-  commonFields,
+  postsQueries,
   paginateWithSorting,
 } from '../utils/metaData.js'
 import {
@@ -20,33 +20,29 @@ import {
   @desc     Get all posts
 */
 const getPosts = asyncHandler(async (req, res, next) => {
-  const selectedQueries = selectQueries(req.query, commonFields)
+  const selectedQueries = selectQueries(req.query, postsQueries)
   const { page, take, skip, orderBy } = paginateWithSorting(selectedQueries)
-
-  let { search } = selectedQueries
-  search = search ? search : null
+  const { status, search } = selectedQueries
 
   const [posts, total] = await prisma.$transaction([
     prisma.posts.findMany({
-      where: search
-        ? {
-            title: {
-              contains: search,
-            },
-          }
-        : {},
+      where: {
+        AND: [
+          search ? { title: { contains: search } } : {},
+          status ? { status } : {},
+        ],
+      },
       take,
       skip,
       orderBy,
     }),
     prisma.posts.count({
-      where: search
-        ? {
-            title: {
-              contains: search,
-            },
-          }
-        : {},
+      where: {
+        AND: [
+          search ? { title: { contains: search } } : {},
+          status ? { status } : {},
+        ],
+      },
     }),
   ])
 
@@ -82,7 +78,7 @@ const getPost = asyncHandler(async (req, res, next) => {
 
   if (!findPost) {
     return res.status(404).json({
-      message: 'No post found',
+      message: 'Post not found',
     })
   }
 
@@ -153,14 +149,14 @@ const updatePost = asyncHandler(async (req, res, next) => {
 
     if (!findPost) {
       return res.status(404).json({
-        message: 'No post found',
+        message: 'Post not found',
       })
     }
 
     // Check authorization
     if (findPost.user_id !== userId) {
       return res.status(403).json({
-        message: 'You are unauthorized',
+        message: 'Permission denied',
       })
     }
 
@@ -197,7 +193,7 @@ const updatePost = asyncHandler(async (req, res, next) => {
       data: { ...data, user_id: userId },
     })
 
-    res.json({ message: 'Post updated successfully' })
+    res.json({ message: 'Post updated' })
   })
 })
 
@@ -220,14 +216,14 @@ const deletePost = asyncHandler(async (req, res, next) => {
 
     if (!findPost) {
       return res.status(404).json({
-        message: 'No post found',
+        message: 'Post not found',
       })
     }
 
     // Check authorization
     if (findPost.user_id !== userId) {
       return res.status(403).json({
-        message: 'You are not authorized to modify the post',
+        message: 'Permission denied',
       })
     }
 
@@ -248,7 +244,7 @@ const deletePost = asyncHandler(async (req, res, next) => {
     })
 
     res.json({
-      message: 'Post deleted successfully',
+      message: 'Post deleted',
     })
   })
 })
