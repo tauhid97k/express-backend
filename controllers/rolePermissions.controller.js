@@ -161,7 +161,7 @@ const updateRolePermissions = asyncHandler(async (req, res, next) => {
     })
 
     res.json({
-      message: `Permissions are updated for ${findRole.name} role`,
+      message: `Permissions are updated`,
     })
   })
 })
