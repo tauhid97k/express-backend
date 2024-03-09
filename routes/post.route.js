@@ -11,7 +11,7 @@ import {
 
 router.get('/', getPosts)
 router.get('/:slug', authMiddleware(), getPost)
-router.post('/', authMiddleware(), createPost)
+router.post('/', createPost)
 router.put('/:slug', authMiddleware(), updatePost)
 router.delete('/:slug', authMiddleware(), deletePost)
 

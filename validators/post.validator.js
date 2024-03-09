@@ -4,8 +4,8 @@ import prisma from '../config/db.config.js'
 const postValidator = yup.object({
   title: yup
     .string()
-    .required('Post title is required')
-    .test('unique', 'Post title already exists', async (value) => {
+    .required('Title is required')
+    .test('unique', 'Title already exists', async (value) => {
       const postTitle = await prisma.posts.findUnique({
         where: {
           title: value,
