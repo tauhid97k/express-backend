@@ -48,7 +48,7 @@ const register = asyncHandler(async (req, res, next) => {
         },
       },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: '7h' }
+      { expiresIn: '5m' }
     )
 
     // Generate JWT Refresh Token
@@ -73,7 +73,7 @@ const register = asyncHandler(async (req, res, next) => {
     // Create secure cookie with refresh token
     res.cookie('express_jwt', refreshToken, {
       httpOnly: true,
-      secure: false, // https
+      secure: true, // https
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     })
@@ -179,7 +179,7 @@ const login = asyncHandler(async (req, res, next) => {
     // Delete old cookie
     res.clearCookie('express_jwt', {
       httpOnly: true,
-      secure: false,
+      secure: true,
       sameSite: 'lax',
     })
   }
@@ -213,7 +213,7 @@ const login = asyncHandler(async (req, res, next) => {
           },
         },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: '7h' }
+        { expiresIn: '5m' }
       )
 
       // Generate JWT Refresh Token
@@ -237,7 +237,7 @@ const login = asyncHandler(async (req, res, next) => {
       // Create secure cookie with refresh token
       res.cookie('express_jwt', refreshToken, {
         httpOnly: true,
-        secure: false, // https
+        secure: true, // https
         sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
@@ -261,8 +261,9 @@ const login = asyncHandler(async (req, res, next) => {
 */
 const refreshAuthToken = asyncHandler(async (req, res, next) => {
   const cookies = req.cookies
-  if (!cookies?.express_jwt)
+  if (!cookies || !cookies.express_jwt) {
     return res.status(401).json({ message: 'Unauthorized' })
+  }
 
   const refreshToken = cookies.express_jwt
 
@@ -271,13 +272,6 @@ const refreshAuthToken = asyncHandler(async (req, res, next) => {
     where: {
       refresh_token: refreshToken,
     },
-  })
-
-  // Delete current cookie
-  res.clearCookie('express_jwt', {
-    httpOnly: true,
-    secure: false,
-    sameSite: 'lax',
   })
 
   // Possible reuse of refresh token detection
@@ -334,7 +328,7 @@ const refreshAuthToken = asyncHandler(async (req, res, next) => {
           },
         },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: '7h' }
+        { expiresIn: '5m' }
       )
 
       // New JWT Refresh Token
@@ -361,7 +355,7 @@ const refreshAuthToken = asyncHandler(async (req, res, next) => {
       // Create new secure cookie with refresh token
       res.cookie('express_jwt', newRefreshToken, {
         httpOnly: true,
-        secure: false, // https
+        secure: true, // https
         sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
@@ -394,7 +388,7 @@ const logout = asyncHandler(async (req, res, next) => {
     // Clear cookie
     res.clearCookie('express_jwt', {
       httpOnly: true,
-      secure: false,
+      secure: true,
       sameSite: 'lax',
     })
 

@@ -4,9 +4,16 @@ import { formatDate } from '../utils/transformData.js'
 
 const authMiddleware = (requiredPermission) => {
   return async (req, res, next) => {
+    // Check Cookie
+    const cookies = req.cookies
+    if (!cookies || !cookies.express_jwt) {
+      return res.status(401).json({ message: 'Unauthorized' })
+    }
+
+    // Check Auth Header
     const authHeader = req.headers.authorization || req.headers.Authorization
 
-    if (!authHeader?.startsWith('Bearer ')) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ message: 'Unauthorized' })
     }
 
@@ -51,9 +58,9 @@ const authMiddleware = (requiredPermission) => {
         }
 
         // Check if user is verified
-        // if (!user.email_verified_at) {
-        //   return res.status(423).json({ message: 'You must verify your email' })
-        // }
+        if (!user.email_verified_at) {
+          return res.status(423).json({ message: 'You must verify your email' })
+        }
 
         // Format User Data
         const formatUser = {
